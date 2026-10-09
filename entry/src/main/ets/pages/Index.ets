@@ -7,36 +7,128 @@ struct Index {
 
   build() {
     Column() {
-      // 顶部状态区
+      // 顶部标题与隐私徽标
       Row() {
-        Text('SmartLens 骨架已就绪').fontSize(16).fontColor('#FFFFFF')
+        Text('SmartLens')
+          .fontSize(DesignTokens.FONT_TITLE)
+          .fontColor(DesignTokens.TEXT_ON_DARK)
         Blank()
-        Text('🔒 本地识别').fontSize(11).fontColor('#94A3B8')
+        Text('🔒 本地识别')
+          .fontSize(DesignTokens.FONT_STATUS)
+          .fontColor(DesignTokens.TEXT_SECONDARY)
       }
       .width('100%')
-      .padding(16)
+      .padding(DesignTokens.SPACE_4)
       .backgroundColor(DesignTokens.CAMERA_BG)
 
-      // 取景区（占位）
-      Column() {
-        Text('📷').fontSize(48)
-        Text('相机取景区').fontSize(13).fontColor('#64748B')
+      // 取景区（真实 CameraKit 接入前的视觉占位）
+      Stack() {
+        Stack() {
+          // 扫描框四角与扫描线
+        Stack() {
+          Text('').width('100%').height(2).backgroundColor(DesignTokens.PRIMARY_GREEN)
+          Text('').width(2).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN)
+        }
+        .width(32)
+        .height(32)
+        .align(Alignment.TopStart)
+
+        Stack() {
+          Text('').width('100%').height(2).backgroundColor(DesignTokens.PRIMARY_GREEN)
+          Text('').width(2).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.TopEnd)
+        }
+        .width(32)
+        .height(32)
+        .align(Alignment.TopEnd)
+
+        Stack() {
+          Text('').width('100%').height(2).backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.BottomStart)
+          Text('').width(2).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN)
+        }
+        .width(32)
+        .height(32)
+        .align(Alignment.BottomStart)
+
+        Stack() {
+          Text('').width('100%').height(2).backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.BottomStart)
+          Text('').width(2).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.TopEnd)
+        }
+        .width(32)
+        .height(32)
+        .align(Alignment.BottomEnd)
+
+        Text('📦')
+          .fontSize(DesignTokens.FONT_PREVIEW_ICON)
+          .width(110)
+          .height(110)
+          .textAlign(TextAlign.Center)
+          .backgroundColor(DesignTokens.CAMERA_BG)
+          .borderRadius(DesignTokens.RADIUS_SCAN)
+
+        Text('')
+          .width('70%')
+          .height(2)
+          .backgroundColor(DesignTokens.PRIMARY_GREEN)
+          .opacity(0.85)
+        }
+        .width('72%')
+        .height('46%')
+        .align(Alignment.Center)
+
+        // 拍照、相册和闪光灯入口（能力接入前保留视觉入口）
+        Column() {
+          Blank().layoutWeight(1)
+          Row() {
+            Text('🖼️')
+              .fontSize(DesignTokens.FONT_STATUS)
+              .fontColor(DesignTokens.TEXT_ON_DARK)
+              .width(56)
+              .height(56)
+              .border({ width: 2, color: DesignTokens.TEXT_ON_DARK })
+              .borderRadius(DesignTokens.RADIUS_ACTION_SMALL)
+              .textAlign(TextAlign.Center)
+              .margin({ right: DesignTokens.SPACE_5 })
+
+            Text('⦿')
+              .fontSize(DesignTokens.FONT_TITLE)
+              .fontColor(DesignTokens.TEXT_PRIMARY)
+              .width(70)
+              .height(70)
+              .backgroundColor(DesignTokens.CARD_WHITE)
+              .borderRadius(DesignTokens.RADIUS_ACTION_LARGE)
+              .textAlign(TextAlign.Center)
+              .margin({ right: DesignTokens.SPACE_5 })
+
+            Text('⚡')
+              .fontSize(DesignTokens.FONT_STATUS)
+              .fontColor(DesignTokens.TEXT_ON_DARK)
+              .width(56)
+              .height(56)
+              .border({ width: 2, color: DesignTokens.TEXT_ON_DARK })
+              .borderRadius(DesignTokens.RADIUS_ACTION_SMALL)
+              .textAlign(TextAlign.Center)
+          }
+          .width('100%')
+          .justifyContent(FlexAlign.Center)
+          .padding({ bottom: DesignTokens.SPACE_4 })
+        }
+        .width('100%')
+        .height('100%')
       }
       .width('100%')
       .layoutWeight(1)
-      .justifyContent(FlexAlign.Center)
-      .backgroundColor('#1A2332')
+      .backgroundColor(DesignTokens.PREVIEW_BG)
 
       // 底部模式 Tab
       Row() {
         ForEach(['识物', '文字', '票据', '扫码'], (item: string, index: number) => {
           Text(item)
-            .fontSize(13)
-            .fontColor(index === this.currentTab ? DesignTokens.PRIMARY_GREEN : '#64748B')
+            .fontSize(DesignTokens.FONT_LABEL)
+            .fontColor(index === this.currentTab ? DesignTokens.PRIMARY_GREEN : DesignTokens.TEXT_SECONDARY)
             .fontWeight(index === this.currentTab ? FontWeight.Bold : FontWeight.Normal)
             .layoutWeight(1)
             .textAlign(TextAlign.Center)
-            .padding({ top: 12, bottom: 12 })
+            .padding({ top: DesignTokens.SPACE_3, bottom: DesignTokens.SPACE_3 })
             .onClick(() => { this.currentTab = index; })
         }, (item: string) => item)
       }
