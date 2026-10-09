@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>③ SmartLens 慧眼识物 · UI 设计图</title>
+<style>
+  :root{ --green:#00C896; --amber:#FFB300; --darkbg:#0B0F14; --card:#FFFFFF; --ink:#0F172A; --sub:#64748B; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:#0B1220;color:#e5e7eb;padding:32px 20px}
+  .wrap{max-width:1180px;margin:0 auto}
+  h1{font-size:26px;color:#fff;margin-bottom:6px}
+  h1 small{font-size:14px;color:#94a3b8;font-weight:400;margin-left:10px}
+  .sub{color:#94a3b8;font-size:13px;margin-bottom:24px}
+  h2{font-size:16px;color:#fff;margin:30px 0 14px;padding-left:10px;border-left:3px solid var(--green)}
+  .swatches{display:flex;gap:10px;flex-wrap:wrap}
+  .sw{width:120px;height:64px;border-radius:10px;display:flex;align-items:flex-end;padding:8px;font-size:11px;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5)}
+  .sw span{background:rgba(0,0,0,.25);padding:1px 6px;border-radius:4px}
+  table{width:100%;border-collapse:collapse;background:#111827;border-radius:10px;overflow:hidden;font-size:13px}
+  th,td{padding:10px 12px;text-align:left;border-bottom:1px solid #1f2937}
+  th{background:#1f2937;color:#fff;font-weight:600}
+  td{color:#cbd5e1}
+  .pages{display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start}
+  .mockup{width:300px;background:#fff;border-radius:24px;padding:14px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  .label{color:#94a3b8;font-size:12px;text-align:center;margin-top:10px}
+  .screen{background:var(--darkbg);border-radius:16px;overflow:hidden;height:520px;display:flex;flex-direction:column;position:relative}
+  .statusbar{height:26px;background:var(--darkbg);display:flex;justify-content:space-between;align-items:center;padding:0 12px;color:#fff;font-size:10px}
+  .camera{flex:1;background:linear-gradient(160deg,#1a2332,#0b0f14);position:relative;display:flex;align-items:center;justify-content:center}
+  .camera .obj{width:110px;height:110px;border-radius:16px;background:linear-gradient(135deg,#334155,#1e293b);display:flex;align-items:center;justify-content:center;font-size:40px}
+  .scanline{position:absolute;left:10%;right:10%;height:2px;background:var(--green);box-shadow:0 0 12px var(--green);animation:scan 2s infinite}
+  @keyframes scan{0%{top:20%}50%{top:78%}100%{top:20%}}
+  .corners{position:absolute;left:18%;right:18%;top:24%;bottom:24%;border:2px solid rgba(0,200,150,.6);border-radius:10px}
+  .bottom-actions{position:absolute;bottom:20px;left:0;right:0;display:flex;justify-content:center;gap:40px}
+  .circle{width:56px;height:56px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+  .circle.shutter{width:70px;height:70px;background:#fff;border:none;color:#0F172A;font-weight:700}
+  .resultcard{background:#fff;color:#0F172A;border-radius:16px;margin:12px;padding:14px;font-size:12px}
+  .tag{display:inline-block;background:#E6FBF4;color:#00A173;border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700;margin-right:6px}
+  .score{color:#00C896;font-weight:700;font-size:12px}
+  .kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px dashed #E2E8F0;font-size:11px}
+  .kv b{color:#334155;font-weight:600}
+  .history{background:#fff;color:#0F172A;border-radius:12px;margin:0 12px 12px;padding:12px;display:flex;gap:10px;align-items:center;font-size:12px}
+  .hist-img{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,#c7f9ec,#99f6e4);flex-shrink:0}
+  .tabbar{height:46px;background:var(--darkbg);display:flex;border-top:1px solid #1e293b}
+  .tabbar div{flex:1;color:#64748b;font-size:11px;display:flex;align-items:center;justify-content:center}
+  .tabbar div.on{color:var(--green);font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>③ SmartLens 慧眼识物 <small>鸿蒙原生 #1 · 阶段③</small></h1>
+  <div class="sub">定位：端侧优先、隐私可控的智能图像识别应用 · 时间 2025.10–2026.04</div>
+
+  <h2>视觉风格</h2>
+  <div class="swatches">
+    <div class="sw" style="background:#00C896">识别绿<span>#00C896</span></div>
+    <div class="sw" style="background:#FFB300">扫描琥珀<span>#FFB300</span></div>
+    <div class="sw" style="background:#0B0F14">相机深底<span>#0B0F14</span></div>
+    <div class="sw" style="background:#FFFFFF;color:#0F172A;text-shadow:none">结果卡片<span>#FFFFFF</span></div>
+    <div class="sw" style="background:#00A173">强调绿<span>#00A173</span></div>
+  </div>
+  <p style="color:#94a3b8;font-size:13px;margin-top:10px">风格：相机优先 · 深色取景 + 亮色结果卡片 · 扫描框 + 绿色识别高亮 · 圆角 12–16px · 端侧处理徽标「🔒 本地识别」</p>
+
+  <h2>功能清单</h2>
+  <table>
+    <tr><th>页面</th><th>核心功能</th><th>AI 能力</th></tr>
+    <tr><td>相机首页</td><td>拍照/相册、扫码、对焦、闪光灯、模式切换</td><td>实时取景 + 识别入口</td></tr>
+    <tr><td>识别结果</td><td>物体分类/置信度、OCR 文字、票据结构化、复制导出</td><td>Core Vision Kit 物体识别 / OCR</td></tr>
+    <tr><td>票据识别</td><td>发票/证件/名片字段提取（金额/税号/姓名/电话）</td><td>文档结构化识别</td></tr>
+    <tr><td>历史记录</td><td>识别历史、收藏、搜索、删除</td><td>RDB 本地存储</td></tr>
+    <tr><td>小艺唤起 / 元服务</td><td>语音唤起识别、免安装卡片调用</td><td>意图框架 + 元服务</td></tr>
+  </table>
+
+  <h2>页面设计图（5 屏）</h2>
+  <div class="pages">
+    <!-- 相机 -->
+    <div>
+      <div class="mockup"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span>🔒 本地识别</span></div>
+        <div class="camera">
+          <div class="corners"></div>
+          <div class="scanline"></div>
+          <div class="obj">📦</div>
+          <div class="bottom-actions"><div class="circle">🖼️</div><div class="circle shutter">⦿</div><div class="circle">⚡</div></div>
+        </div>
+        <div class="tabbar"><div class="on">识物</div><div>文字</div><div>票据</div><div>扫码</div></div>
+      </div></div>
+      <p class="label">相机首页 · 取景 + 模式切换</p>
+    </div>
+    <!-- 识别结果 -->
+    <div>
+      <div class="mockup"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span>🔒 本地识别</span></div>
+        <div style="background:linear-gradient(135deg,#c7f9ec,#99f6e4);height:130px;display:flex;align-items:center;justify-content:center;font-size:44px">📦</div>
+        <div class="resultcard">
+          <div style="margin-bottom:8px"><span class="tag">物体识别</span><span class="score">置信度 96%</span></div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:10px">联想笔记本电脑</div>
+          <div class="kv"><b>分类</b><span>电子产品 / 电脑</span></div>
+          <div class="kv"><b>识别耗时</b><span>0.4s（端侧）</span></div>
+          <div class="kv"><b>隐私</b><span>图片未上传</span></div>
+        </div>
+        <div style="display:flex;gap:8px;margin:0 12px">
+          <div style="flex:1;text-align:center;background:var(--green);color:#fff;border-radius:10px;padding:10px;font-size:12px">复制结果</div>
+          <div style="flex:1;text-align:center;background:#1e293b;color:#fff;border-radius:10px;padding:10px;font-size:12px">保存</div>
+        </div>
+      </div></div>
+      <p class="label">识别结果 · 卡片 + 置信度</p>
+    </div>
+    <!-- 票据识别 -->
+    <div>
+      <div class="mockup"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span>🔒 本地识别</span></div>
+        <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);height:120px;display:flex;align-items:center;justify-content:center;font-size:36px">🧾</div>
+        <div class="resultcard">
+          <div style="margin-bottom:8px"><span class="tag">发票识别</span></div>
+          <div class="kv"><b>发票代码</b><span>031001900111</span></div>
+          <div class="kv"><b>发票号码</b><span>12345678</span></div>
+          <div class="kv"><b>金额</b><span>¥ 1,280.00</span></div>
+          <div class="kv"><b>税额</b><span>¥ 76.80</span></div>
+          <div class="kv"><b>开票日期</b><span>2025-11-12</span></div>
+          <div class="kv"><b>销售方</b><span>某某科技有限公司</span></div>
+        </div>
+      </div></div>
+      <p class="label">票据识别 · 结构化字段</p>
+    </div>
+    <!-- 历史 -->
+    <div>
+      <div class="mockup"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span>🔒 本地识别</span></div>
+        <div style="padding:12px 12px 0;color:#fff;font-size:14px;font-weight:600">历史记录</div>
+        <div style="flex:1;overflow:hidden;padding:8px">
+          <div class="history"><div class="hist-img"></div><div><div style="font-weight:600;margin-bottom:3px">联想笔记本电脑</div><div style="font-size:10px;color:#64748b">物体识别 · 今天 10:24</div></div></div>
+          <div class="history"><div class="hist-img" style="background:#fef3c7"></div><div><div style="font-weight:600;margin-bottom:3px">增值税发票 ¥1,280</div><div style="font-size:10px;color:#64748b">票据识别 · 昨天 15:02</div></div></div>
+          <div class="history"><div class="hist-img" style="background:#dbeafe"></div><div><div style="font-weight:600;margin-bottom:3px">二维码 · 网址链接</div><div style="font-size:10px;color:#64748b">扫码 · 12-01</div></div></div>
+        </div>
+      </div></div>
+      <p class="label">历史 · 分类 + 时间</p>
+    </div>
+    <!-- 元服务/小艺 -->
+    <div>
+      <div class="mockup"><div class="screen">
+        <div class="statusbar"><span>9:41</span><span>🔒 本地识别</span></div>
+        <div style="flex:1;background:linear-gradient(180deg,#0f172a,#1e293b);padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+          <div style="width:64px;height:64px;border-radius:18px;background:var(--green);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff">👁️</div>
+          <div style="color:#fff;font-size:15px;font-weight:600">小艺唤起识别</div>
+          <div style="color:#94a3b8;font-size:12px;text-align:center;line-height:1.7">说「小艺，识别这张图片」<br>无需打开应用即可调用识别能力</div>
+          <div style="background:#fff;border-radius:16px;padding:12px 24px;font-size:12px;color:#0F172A;font-weight:600">元服务 · 免安装</div>
+        </div>
+      </div></div>
+      <p class="label">小艺唤起 · 元服务</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
