@@ -1,0 +1,9 @@
+{
+  "string": [
+    { "name": "module_desc", "value": "SmartLens 智能图像识别" },
+    { "name": "EntryAbility_desc", "value": "智能图像识别" },
+    { "name": "EntryAbility_label", "value": "SmartLens" },
+    { "name": "camera_reason", "value": "用于拍照识别物体和文字" },
+    { "name": "read_media_reason", "value": "用于从相册选择图片进行识别" }
+  ]
+}

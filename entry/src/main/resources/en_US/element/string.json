@@ -1,0 +1,7 @@
+{
+  "string": [
+    { "name": "module_desc", "value": "SmartLens image recognition" },
+    { "name": "EntryAbility_desc", "value": "image recognition" },
+    { "name": "EntryAbility_label", "value": "SmartLens" }
+  ]
+}
