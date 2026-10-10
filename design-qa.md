@@ -29,6 +29,29 @@
 - ArkTS 构建可通过，但尚未形成设备运行证据。
 - 当前拍照、相册和闪光灯入口是视觉占位，不能判定为功能通过。
 
+## 2026-10-10｜Mate 90 Pro 模拟器运行态回归
+
+### 运行环境
+
+- 设备/模拟器：Mate 90 Pro
+- 系统版本：HarmonyOS 7.0.0（API 26）
+- 包名与 Ability：`com.example.smartlens` / `EntryAbility`
+- 安装方式：`hdc install -r entry/build/default/outputs/default/entry-default-unsigned.hap`
+
+### 检查结果
+
+| 场景 | 操作前状态 | 用户动作 | 操作后状态 | 结果 | 证据 |
+| --- | --- | --- | --- | --- | --- |
+| 首页 | Ability 已安装 | 启动 `EntryAbility` | SmartLens 首页、扫描框、底部操作区可见 | `passed` | `docs/qa/2026-10-10-home-granted.jpeg` |
+| 文字模式 | 默认选中识物 | 点击“文字” | “文字”变为识别绿并加粗 | `passed` | `docs/qa/2026-10-10-tab-text.jpeg` |
+| 票据模式 | 文字模式已选中 | 点击“票据” | “票据”变为识别绿并加粗 | `passed` | `docs/qa/2026-10-10-tab-ticket.jpeg` |
+| 权限拒绝降级 | 首次权限对话框 | 点击“不允许” | 首页显示“相机权限未开启，拍照识别不可用” | `passed` | `docs/qa/2026-10-10-permission-denied.jpeg` |
+
+### 结论与风险
+
+- L3 模拟器交互证据已建立，权限允许和拒绝分支均可观察。
+- 模拟器无法替代真实摄像头和 Core Vision Kit 能力验证；当前取景区仍是占位实现。
+
 ## 2026-10-10｜识别结果模型构建验证
 
 ### 检查结果

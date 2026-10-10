@@ -4,6 +4,7 @@ import { DesignTokens } from '../common/DesignTokens';
 @Component
 struct Index {
   @State currentTab: number = 0;
+  @StorageProp('cameraPermissionState') cameraPermissionState: string = 'pending';
 
   build() {
     Column() {
@@ -20,6 +21,17 @@ struct Index {
       .width('100%')
       .padding(DesignTokens.SPACE_4)
       .backgroundColor(DesignTokens.CAMERA_BG)
+
+      if (this.cameraPermissionState === 'denied') {
+        Row() {
+          Text('⚠️ 相机权限未开启，拍照识别不可用')
+            .fontSize(DesignTokens.FONT_STATUS)
+            .fontColor(DesignTokens.SCAN_AMBER)
+        }
+        .width('100%')
+        .padding({ left: DesignTokens.SPACE_4, right: DesignTokens.SPACE_4, top: DesignTokens.SPACE_2, bottom: DesignTokens.SPACE_2 })
+        .backgroundColor(DesignTokens.PREVIEW_BG)
+      }
 
       // 取景区（真实 CameraKit 接入前的视觉占位）
       Stack() {

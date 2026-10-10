@@ -32,6 +32,16 @@
 - 提交：`a692daa`。
 - 验证：`hvigorw.bat assembleHap` 成功；未签名警告保留。
 
+## 2026-10-10｜运行时相机权限与拒绝降级
+
+- 状态：`in_progress`（权限链路完成，CameraKit 真实取景待接入）。
+- 改动：新增 `PermissionService`，Ability 启动后仅请求 `ohos.permission.CAMERA`；使用 AppStorage 将权限状态同步到首页。
+- 改动：首页在权限拒绝时显示琥珀色降级提示“相机权限未开启，拍照识别不可用”。
+- 验证：`hvigorw.bat assembleHap --no-daemon` 成功；HAP 已通过 `hdc install -r` 部署到 Mate 90 Pro（HarmonyOS 7.0.0/API 26）。
+- 设备证据：允许路径见 `docs/qa/2026-10-10-home-granted.jpeg`；文字/票据 Tab 见 `docs/qa/2026-10-10-tab-text.jpeg`、`docs/qa/2026-10-10-tab-ticket.jpeg`；拒绝路径见 `docs/qa/2026-10-10-permission-denied.jpeg`。
+- 日志证据：`Camera permission granted: false`，`authResults:[-1]`，`dialogShownResults:[true]`。
+- 遗留风险：当前取景区仍是视觉占位，拍照/相册/闪光灯尚未绑定系统能力；HAP 仍未配置签名。
+
 ## 2026-10-09｜工程骨架
 
 - 状态：`done`
