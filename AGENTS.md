@@ -83,3 +83,11 @@ L1 构建 HAP 通过 → L2 关键逻辑单测 → L3 真机跑通核心链路�
 - 第一步：用 DevEco Studio 新建空 Ability 工程（或手动补齐 hvigorfile.ts/module.json5/oh-package.json5），
   然后实现「相机首页」：取景框 + 扫描框 + 底部模式 Tab（识物/文字/票据/扫码），对照 docs/design.html 第一屏。
 - 每完成一个可验证单元就 git 提交。
+
+## 11. 项目记录文件
+- `tasks.md`：当前任务、状态和完成检查项。
+- `changes.md`：按日期记录实际改动、验证结果和遗留风险。
+- `development-log.md`：面向开发过程的时间线记录。
+- `PROJECT_CONTEXT.md`：供后续智能体快速恢复上下文。
+- `design.md` / `design-qa.md`：设计基线和设备/交互验证结论。
+- `docs/qa/`：构建、前台状态、截图和交互证据。
