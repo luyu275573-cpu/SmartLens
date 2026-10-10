@@ -52,6 +52,29 @@
 - L3 模拟器交互证据已建立，权限允许和拒绝分支均可观察。
 - 模拟器无法替代真实摄像头和 Core Vision Kit 能力验证；当前取景区仍是占位实现。
 
+## 2026-10-10｜CameraKit surface 回归
+
+### 运行环境
+
+- 设备/模拟器：Mate 90 Pro
+- 系统版本：HarmonyOS 7.0.0（API 26）
+- 包名与 Ability：`com.example.smartlens` / `EntryAbility`
+- 安装方式：`hdc install -r entry/build/default/outputs/default/entry-default-unsigned.hap`
+
+### 检查结果
+
+| 场景 | 操作前状态 | 用户动作 | 操作后状态 | 结果 | 证据 |
+| --- | --- | --- | --- | --- | --- |
+| CameraKit 预览 surface | 相机权限已允许 | 启动首页并等待 `XComponent.onLoad` | 日志出现 `camera-previewSurface`，首页展示 CameraKit surface | `passed` | `docs/qa/2026-10-10-camera-preview-surface.jpeg` |
+| 相机资源释放入口 | 首页已创建预览 | 退出/销毁页面 | `onDestroy` 调用 `CameraPreviewService.release` | `passed` | `entry/src/main/ets/pages/Index.ets` |
+| 权限拒绝回退 | 首次启动权限对话框 | 点击“不允许” | 首页保留占位预览并显示琥珀色降级提示 | `passed` | `docs/qa/2026-10-10-camera-permission-denied.jpeg` |
+
+### 结论与风险
+
+- CameraKit 的后置摄像头输入、预览输出、会话配置和 UI surface 链路已在模拟器建立，最新允许分支已观察到摄像头画面。
+- 预览证据图已遮盖实时摄像头内容，避免把个人影像提交到仓库；surface 与扫描叠加层仍可复核。
+- 模拟器画面只能证明预览链路可用，真实设备仍需复验画面方向、比例和拍照回调。
+
 ## 2026-10-10｜识别结果模型构建验证
 
 ### 检查结果

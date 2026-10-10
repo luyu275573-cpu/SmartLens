@@ -6,8 +6,8 @@ SmartLens 是 HarmonyOS NEXT 原生端侧图像识别应用，覆盖拍照识物
 
 - 平台：HarmonyOS NEXT / Stage 模型 / API 26
 - 语言与 UI：ArkTS + ArkUI
-- 当前已实现：工程入口、设计 Token、相机首页视觉骨架、模式 Tab、识别结果领域模型与置信度门槛
-- 尚未实现：CameraKit 真实取景、运行时权限、Core Vision Kit、结果页、历史页、签名配置和真机回归
+- 当前已实现：工程入口、设计 Token、相机首页视觉骨架、模式 Tab、识别结果领域模型与置信度门槛、运行时相机权限、CameraKit 后置预览 surface
+- 尚未实现：`PhotoOutput` 拍照回调、Core Vision Kit、结果页、历史页、签名配置和真机回归
 
 ## 构建
 

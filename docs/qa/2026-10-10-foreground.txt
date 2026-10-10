@@ -1,0 +1,23 @@
+    Mission ID #33  mission name #[#com.example.smartlens:entry:EntryAbility]  lockedState #0  mission affinity #[]
+        main name [EntryAbility]
+        bundle name [com.example.smartlens]
+        state #FOREGROUND  start time [6742894]
+        app state #FOREGROUND
+      bundle name [com.huawei.hms.adsservice]
+      bundle name [com.huawei.hmsapp.intelligent]
+      bundle name [com.huawei.hmsapp.intelligent]
+      bundle name [com.ohos.contactsdataability]
+      bundle name [com.ohos.medialibrary.medialibrarydata]
+      AbilityRecord ID #20   state #FOREGROUND   start time [4797824]
+      bundle name [com.ohos.sceneboard]
+      app state #FOREGROUND
+      root host bundle name [com.ohos.sceneboard]
+      bundle name [com.ohos.sceneboard]
+      app state #FOREGROUND
+      bundle name [com.ohos.sceneboard]
+      bundle name [com.ohos.sceneboard]
+      app state #FOREGROUND
+        bundle name []
+      state #FOREGROUND
+      state #FOREGROUND
+      state #FOREGROUND

@@ -18,7 +18,9 @@
 - 首页已经有扫描框视觉骨架、模式 Tab 和端侧徽标。
 - `model/RecognitionResult.ets` 与 `service/RecognitionService.ets` 已建立识别结果基础层和 0.6 置信度规则。
 - `service/PermissionService.ets` 已建立运行时权限封装；`EntryAbility` 启动后请求相机权限，并通过 AppStorage 同步状态。
-- 首页已实现相机权限拒绝降级提示；真 CameraKit、拍照回调、结果页和历史页尚未接入。
+- 首页已实现相机权限拒绝降级提示，并通过 `XComponent` 接入 CameraKit 后置摄像头预览；预览启动失败时自动回退到占位预览。
+- `service/CameraPreviewService.ets` 已封装 `PhotoSession`、`PreviewOutput` 的创建、启动和释放。
+- `PhotoOutput` 拍照回调、结果页和历史页尚未接入。
 
 ## 构建与记录
 
@@ -30,11 +32,11 @@ hvigorw.bat assembleHap
 
 任务状态看 `tasks.md`，详细改动看 `changes.md` 和 `docs/development-log.md`，设备证据看 `docs/qa/`。
 
-当前进行中的任务是 T-20261010-003：权限链路已完成并在 Mate 90 Pro 模拟器验证，下一步接入 CameraKit 后置摄像头取景与拍照回调。
+当前进行中的任务是 T-20261010-003：权限链路和 CameraKit 预览 surface 已在 Mate 90 Pro 模拟器验证，下一步接入 `PhotoOutput`/`PixelMap` 拍照回调并进行真机回归。
 
 ## 当前风险
 
 - `bundleName` 仍为示例值 `com.example.smartlens`。
 - `signingConfigs` 为空，当前只能产出未签名 HAP。
-- 只有 phone 设备声明，折叠屏/平板和真机尚未回归。
+- 只有 phone 设备声明，折叠屏/平板和真机尚未回归；模拟器已能提供预览画面，但不替代真机相机验证。
 

@@ -46,10 +46,12 @@
 - [x] 通过 `PermissionService` 在 Ability 启动后请求相机权限。
 - [x] 权限拒绝后首页显示“相机权限未开启，拍照识别不可用”降级提示。
 - [x] 在 Mate 90 Pro API 26 模拟器完成允许/拒绝路径验证并保存截图证据。
+- [x] 接入 CameraKit 后置摄像头 `PhotoSession`、`PreviewOutput` 与 `XComponent` surface 生命周期。
+- [x] 模拟器验证 CameraKit surface 创建、权限允许分支和资源释放入口。
 
 待完成：
 
-- [ ] 接入 CameraKit 后置摄像头真实取景与拍照回调。
+- [ ] 接入 `PhotoOutput` 拍照回调并将 `PixelMap` 交给识别编排层。
 - [ ] 在真实设备完成相机能力回归。
 
 ### T-20261010-004 识别结果页

@@ -42,6 +42,18 @@
 - 日志证据：`Camera permission granted: false`，`authResults:[-1]`，`dialogShownResults:[true]`。
 - 遗留风险：当前取景区仍是视觉占位，拍照/相册/闪光灯尚未绑定系统能力；HAP 仍未配置签名。
 
+## 2026-10-10｜CameraKit 后置取景链路
+
+- 状态：`in_progress`（预览链路完成，拍照回调和真机回归待完成）。
+- 改动：新增 `CameraPreviewService`，封装后置摄像头发现、预览 profile、`PhotoSession` 配置、启动和释放。
+- 改动：首页使用 `XComponent` surface 承载 CameraKit 预览；无权限、无可用 profile 或启动失败时回退到占位预览并显示降级提示。
+- 涉及文件：`entry/src/main/ets/service/CameraPreviewService.ets`、`entry/src/main/ets/pages/Index.ets`。
+- 模拟器证据：`docs/qa/2026-10-10-camera-preview-surface.jpeg`；权限拒绝证据：`docs/qa/2026-10-10-camera-permission-denied.jpeg`。
+- 证据处理：预览截图已遮盖摄像头实时画面，避免提交个人影像；CameraKit 真实启动状态以设备日志为准。
+- 构建与验证：`hvigorw.bat assembleHap --no-daemon`、`scripts/check-standard.ps1`；Mate 90 Pro API 26 通过 surface/权限分支验证。
+- 当前构建产物：`entry/build/default/outputs/default/entry-default-unsigned.hap`，75,425 bytes。
+- 遗留风险：Mate 90 Pro 模拟器已能输出摄像头帧，但仍不能替代真机验证；尚未接入 `PhotoOutput` 和 `PixelMap` 识别。
+
 ## 2026-10-09｜工程骨架
 
 - 状态：`done`

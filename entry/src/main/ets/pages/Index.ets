@@ -1,10 +1,45 @@
 import { DesignTokens } from '../common/DesignTokens';
+import { Context } from '@kit.AbilityKit';
+import { CameraPreviewHandle, CameraPreviewService } from '../service/CameraPreviewService';
 
 @Entry
 @Component
 struct Index {
   @State currentTab: number = 0;
   @StorageProp('cameraPermissionState') cameraPermissionState: string = 'pending';
+  @State cameraStatus: string = 'idle';
+  private readonly cameraController: XComponentController = new XComponentController();
+  private cameraHandle: CameraPreviewHandle | undefined = undefined;
+
+  aboutToDisappear(): void {
+    this.stopCameraPreview();
+  }
+
+  private async startCameraPreview(): Promise<void> {
+    if (this.cameraPermissionState !== 'granted' || this.cameraHandle !== undefined || this.cameraStatus === 'starting') {
+      return;
+    }
+    this.cameraStatus = 'starting';
+    try {
+      const hostContext: Context | undefined = this.getUIContext().getHostContext();
+      if (hostContext === undefined) {
+        throw new Error('HOST_CONTEXT_UNAVAILABLE');
+      }
+      const surfaceId: string = this.cameraController.getXComponentSurfaceId();
+      this.cameraHandle = await CameraPreviewService.open(hostContext, surfaceId);
+      this.cameraStatus = 'ready';
+    } catch {
+      this.cameraStatus = 'fallback';
+    }
+  }
+
+  private async stopCameraPreview(): Promise<void> {
+    const handle: CameraPreviewHandle | undefined = this.cameraHandle;
+    this.cameraHandle = undefined;
+    if (handle !== undefined) {
+      await CameraPreviewService.release(handle);
+    }
+  }
 
   build() {
     Column() {
@@ -22,9 +57,9 @@ struct Index {
       .padding(DesignTokens.SPACE_4)
       .backgroundColor(DesignTokens.CAMERA_BG)
 
-      if (this.cameraPermissionState === 'denied') {
+      if (this.cameraPermissionState === 'denied' || this.cameraStatus === 'fallback') {
         Row() {
-          Text('⚠️ 相机权限未开启，拍照识别不可用')
+          Text(this.cameraPermissionState === 'denied' ? '⚠️ 相机权限未开启，拍照识别不可用' : '⚠️ 相机暂不可用，已切换占位预览')
             .fontSize(DesignTokens.FONT_STATUS)
             .fontColor(DesignTokens.SCAN_AMBER)
         }
@@ -33,9 +68,25 @@ struct Index {
         .backgroundColor(DesignTokens.PREVIEW_BG)
       }
 
-      // 取景区（真实 CameraKit 接入前的视觉占位）
+      // CameraKit 预览区；未授权或设备不支持时回退到占位预览。
       Stack() {
         Stack() {
+          if (this.cameraPermissionState === 'granted' && this.cameraStatus !== 'fallback') {
+            XComponent({ id: 'camera-preview', type: XComponentType.SURFACE, controller: this.cameraController })
+              .width('100%')
+              .height('100%')
+              .onLoad(() => { this.startCameraPreview(); })
+              .onDestroy(() => { this.stopCameraPreview(); })
+          } else {
+            Text('📦')
+              .fontSize(DesignTokens.FONT_PREVIEW_ICON)
+              .width(110)
+              .height(110)
+              .textAlign(TextAlign.Center)
+              .backgroundColor(DesignTokens.CAMERA_BG)
+              .borderRadius(DesignTokens.RADIUS_SCAN)
+          }
+
           // 扫描框四角与扫描线
         Stack() {
           Text('').width('100%').height(2).backgroundColor(DesignTokens.PRIMARY_GREEN)
@@ -68,14 +119,6 @@ struct Index {
         .width(32)
         .height(32)
         .align(Alignment.BottomEnd)
-
-        Text('📦')
-          .fontSize(DesignTokens.FONT_PREVIEW_ICON)
-          .width(110)
-          .height(110)
-          .textAlign(TextAlign.Center)
-          .backgroundColor(DesignTokens.CAMERA_BG)
-          .borderRadius(DesignTokens.RADIUS_SCAN)
 
         Text('')
           .width('70%')
