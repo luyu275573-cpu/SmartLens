@@ -1,5 +1,12 @@
 # SmartLens 开发日志
 
+## 2026-10-11
+
+- 完成一次全面缺陷与安全审查，覆盖 ArkTS 页面、CameraKit 服务、权限声明、Ability 生命周期、识别结果模型、构建脚本、HAP 元数据、隐私与无障碍。
+- 确认 `scripts/build-harmony.ps1 -BuildMode release` 参数未生效：产物仍为 `debug:true`；显式传入 `-p buildMode=release` 才能得到 release 元数据，但项目仍未签名。
+- 确认正式身份、签名、最小权限、隐私政策、相机后台生命周期和资源异常释放等阻断/高风险项，完整报告见 `docs/qa/2026-10-11-security-audit.md`。
+- 本次仅新增审查记录，没有修改业务源码；下一步按报告顺序建立修复任务。
+
 ## 2026-10-10
 
 - 接入远程仓库 `origin/master`。

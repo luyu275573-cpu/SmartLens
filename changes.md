@@ -1,5 +1,14 @@
 # 变更记录
 
+## 2026-10-11｜全面缺陷与安全审查
+
+- 状态：`done`
+- 目标：全面排查当前工程的潜在 bug、权限/隐私风险和发布门禁问题。
+- 改动：新增 `docs/qa/2026-10-11-security-audit.md`，记录源码、配置、HAP 元数据、对比度和已有设备证据的审查结论；未修改业务源码和发布身份。
+- 验证：`scripts/check-standard.ps1` 通过；`hvigorw assembleHap --no-daemon`、`assembleApp --no-daemon` 通过但未签名；`scripts/build-harmony.ps1 -BuildMode release` 复现为 debug HAP；显式 `-p buildMode=release` 可生成 release 元数据但仍未签名。
+- 结论：审查状态 `blocked`。阻断项包括正式身份、签名、release 脚本、隐私政策；高风险项包括相机异步竞态、后台释放、异常清理和运行时错误监听。
+- 遗留风险：尚未修复报告中的代码问题；本次环境未检测到 `hdc`，动态结论沿用 2026-10-10 模拟器证据，真机回归仍待完成。
+
 ## 2026-10-10｜工程记录体系与识别结果基础模型
 
 - 状态：`done`
