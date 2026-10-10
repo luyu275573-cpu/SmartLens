@@ -24,7 +24,7 @@ hvigorw.bat assembleHap
 - `entry/src/main/ets/model/`：识别结果模型
 - `entry/src/main/ets/service/`：业务编排服务
 - `docs/`：产品、开发、设计和 QA 资料
-- `tasks.md` / `changes.md` / `development-log.md`：过程记录
+- `tasks.md` / `changes.md` / `docs/development-log.md`：过程记录
 
 ## 记录与门禁
 

@@ -27,7 +27,7 @@ hvigorw.bat assembleHap
 ./scripts/build-harmony.ps1
 ```
 
-任务状态看 `tasks.md`，详细改动看 `changes.md` 和 `development-log.md`，设备证据看 `docs/qa/`。
+任务状态看 `tasks.md`，详细改动看 `changes.md` 和 `docs/development-log.md`，设备证据看 `docs/qa/`。
 
 ## 当前风险
 
