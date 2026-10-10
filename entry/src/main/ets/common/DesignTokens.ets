@@ -35,6 +35,7 @@ export class DesignTokens {
 
   // 字号（vp）
   static readonly FONT_TITLE: number = 16
+  static readonly FONT_SECTION: number = 22
   static readonly FONT_STATUS: number = 11
   static readonly FONT_LABEL: number = 13
   static readonly FONT_PREVIEW_ICON: number = 40

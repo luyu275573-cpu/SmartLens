@@ -42,7 +42,7 @@
 ## 状态与数据
 
 - 核心状态：当前模式、识别 loading、识别结果、置信度和人工确认状态。
-- 持久化：规划使用 Preferences 与 RDB 保存历史，当前尚未接入。
+- 持久化：当前版本使用 Preferences 保存最多 100 条识别文本和元数据；图片 PixelMap 不写入历史，RDB 留作后续收藏/搜索扩展。
 - 系统能力：规划使用 CameraKit、Core Vision Kit、Intent Kit 和元服务能力。
 
 ## 无障碍

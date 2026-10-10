@@ -1,15 +1,25 @@
 # 变更记录
 
+## 2026-10-11｜真实 PixelMap、Core Vision Kit 与结果历史闭环
+
+- 状态：`blocked`
+- 目标：把相机/相册输入交给真实 `PixelMap` 和 Core Vision Kit，完成结果页与本地历史记录。
+- 识别链路：`CapturePhoto.main` 与 PhotoViewPicker URI 均转换为 RGBA `PixelMap`；物体识别使用 `objectDetection.ObjectDetector`，文字使用 `textRecognition`，票据模式增加 OCR 字段提取（发票代码、号码、金额、税额、价税合计、日期、销售方）。扫码明确返回未接入错误，不生成假结果。
+- 结果与历史：新增 `Result`、`History` 页面和 `main_pages.json` 路由；结果页展示条目、置信度、人工确认提示和复制；`HistoryService` 使用 Preferences 保存最多 100 条，仅保存文本和元数据；结果 ID 使用 UUID，历史解析校验类型、分数、长度和时间戳，写入队列失败后可继续工作。
+- 资源与输入：相机回调释放 `CapturePhoto` 和 `PixelMap`；PixelMap 格式不符时尝试转换为 RGBA_8888；Core Vision 分析器始终在 `finally` 销毁。
+- 验证：`hvigorw.bat assembleHap --no-daemon -p buildMode=debug` 通过；Mate 90 Pro API 26 模拟器确认拍照回调和 RGBA PixelMap 生成。物体检测返回 `1011000002`，OCR 初始化返回超时 `200`，因此识别成功和非空历史回读状态为 `blocked`，证据见 `docs/qa/2026-10-11-recognition-chain-hilog.txt`。
+- 遗留风险：需在提供 Core Vision 模型的真机或能力完整设备上复验识别成功、结果页跳转、Preferences 非空列表、删除和重启回读；正式 bundleName/vendor、签名、平板/折叠屏回归按当前范围后置。
+
 ## 2026-10-11｜全面审查问题修复与模拟器回归
 
 - 状态：`done`
 - 权限：从 `module.json5` 移除未使用的 `READ_MEDIA`、`INTERNET`，相册改用系统 `PhotoViewPicker`。
 - CameraKit：补齐输入/输出/session 错误监听、PhotoOutput 回调、异步启动代次校验、页面/后台停止、异常阶段清理和幂等释放。
-- 识别模型：过滤 NaN 与越界分数，复制输入项，使用时间戳加递增序列生成结果 ID。
+- 识别模型：过滤 NaN 与越界分数，复制输入项，使用 UUID 生成结果 ID。
 - 首页：拍照、相册、闪光灯入口具备实际调用和降级提示；新增隐私政策弹窗、无障碍语义、设备类型声明和自动旋转。
 - 构建门禁：`scripts/build-harmony.ps1` 将 `BuildMode` 传给 Hvigor，并解析 HAP `module.json` 校验 debug/release 元数据。
 - 验证：标准检查通过；debug/release 构建均通过；HAP 元数据仅含 `ohos.permission.CAMERA`；Mate 90 Pro API 26 模拟器完成预览、隐私政策、系统图片选择器、拍照反馈和闪光灯降级验证。
-- 遗留风险：HAP 仍未签名，正式 bundleName/vendor 未确定；真实 PixelMap/Core Vision Kit、真机和多设备回归待后续任务。
+- 遗留风险：HAP 仍未签名，正式 bundleName/vendor 未确定；真实 PixelMap/Core Vision Kit、真机和多设备回归在后续任务中处理。
 
 ## 2026-10-11｜全面缺陷与安全审查
 

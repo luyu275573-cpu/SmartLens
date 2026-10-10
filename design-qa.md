@@ -1,5 +1,30 @@
 # 设计与交互 QA
 
+## 2026-10-11｜真实识别链路与结果/历史页验证
+
+### 运行环境
+
+- 设备/模拟器：Mate 90 Pro 模拟器
+- 系统版本：HarmonyOS 7.0.0（API 26）
+- 目标：`127.0.0.1:5557`
+- 包名与 Ability：`com.example.smartlens` / `EntryAbility`
+- 构建：debug，`entry/build/default/outputs/default/entry-default-unsigned.hap`，未签名
+
+### 检查结果
+
+| 场景 | 操作前状态 | 用户动作 | 操作后状态 | 结果 | 证据 |
+| --- | --- | --- | --- | --- | --- |
+| 拍照回调 | CameraKit 预览已启动 | 点击中心拍照按钮 | 收到 `CapturePhoto` 回调并转为 RGBA `PixelMap` | `passed` | `docs/qa/2026-10-11-recognition-chain-hilog.txt` |
+| 物体识别 | RGBA `PixelMap` 已生成 | 进入物体识别编排 | 模拟器 Core Vision 返回 `1011000002`，页面显示可理解失败提示 | `blocked` | `docs/qa/2026-10-11-recognition-chain.jpeg` |
+| OCR | RGBA `PixelMap` 已生成 | 切换文字模式并拍照 | OCR 初始化返回超时 `200`，没有写入假结果 | `blocked` | `docs/qa/2026-10-11-recognition-chain-hilog.txt` |
+| 历史空状态 | 应用重启后无成功识别记录 | 点击“历史” | 历史页正常加载空状态，页面路由可用 | `passed` | `docs/qa/2026-10-11-history-empty.jpeg` |
+
+### 结论与风险
+
+- `CapturePhoto → RGBA PixelMap → Core Vision Kit` 的真实调用链已经接通；模拟器不提供可用的物体模型服务，OCR 初始化也超时，因此不能把识别成功写成通过。
+- 识别成功时会创建结果对象、写入 Preferences 并路由到 `Result`；本轮因视觉服务阻塞未产生可持久化结果，结果列表、删除和重启后的非空回读需在提供 Core Vision 模型的设备上复验。
+- 结果页、历史页、票据字段后处理和扫码未接入说明均已写入代码；正式身份、签名、真机和平板/折叠屏回归按用户要求后置。
+
 ## 2026-10-11｜审查修复模拟器回归
 
 ### 运行环境
@@ -25,7 +50,7 @@
 
 - 本轮已验证入口响应、系统 Picker、PhotoOutput 反馈和不支持能力的降级状态。
 - 截图中的实时摄像头区域已遮盖；模拟器证据不能替代真机、平板和折叠态验证。
-- 真实识别、结果页、PixelMap 传递和正式签名仍未完成。
+- 真实识别、结果页和 PixelMap 传递在后续任务中完成；正式签名仍未完成。
 
 ## 2026-10-10｜首页静态基线
 

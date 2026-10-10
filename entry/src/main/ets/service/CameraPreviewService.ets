@@ -2,6 +2,8 @@ import { camera } from '@kit.CameraKit';
 import { Context } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
+import { image } from '@kit.ImageKit';
+import { ImageProcessingService } from './ImageProcessingService';
 
 const DOMAIN = 0x0000;
 
@@ -28,7 +30,7 @@ export class CameraPreviewService {
   static async open(
     context: Context,
     surfaceId: string,
-    onPhotoAvailable?: () => void,
+    onPhotoAvailable?: (pixelMap: image.PixelMap) => Promise<void>,
     onError?: CameraPreviewErrorCallback
   ): Promise<CameraPreviewHandle> {
     if (surfaceId.length === 0) {
@@ -100,9 +102,18 @@ export class CameraPreviewService {
         onError?.(error.code);
       };
       photoAvailableCallback = async (photo: camera.CapturePhoto): Promise<void> => {
+        let pixelMap: image.PixelMap | undefined;
         try {
-          onPhotoAvailable?.();
+          hilog.info(DOMAIN, 'SmartLens', 'CapturePhoto callback received');
+          pixelMap = await ImageProcessingService.fromCapturePhoto(photo);
+          hilog.info(DOMAIN, 'SmartLens', 'CapturePhoto converted to RGBA PixelMap');
+          if (onPhotoAvailable !== undefined) {
+            await onPhotoAvailable(pixelMap);
+          }
         } finally {
+          if (pixelMap !== undefined) {
+            await ImageProcessingService.release(pixelMap);
+          }
           try {
             await photo.release();
           } catch {

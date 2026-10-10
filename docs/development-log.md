@@ -1,5 +1,15 @@
 # SmartLens 开发日志
 
+## 2026-10-11｜真实识别主链路与结果/历史页
+
+- 完成 `CapturePhoto.main`、系统图片选择器 URI 到 RGBA `PixelMap` 的输入适配，并在格式不符时执行 PixelMap 转换；识别完成或失败都会释放图片资源。
+- 接入 `@kit.CoreVisionKit`：物体模式使用 Object Detection，文字模式使用 OCR，票据模式组合物体检测、OCR 和本地字段提取；扫码保持明确的未接入降级，不伪造结果。
+- 新增 `Result.ets` 与 `History.ets` 页面，注册页面路由；结果页展示分类/文本、置信度、人工确认提示、端侧徽标和复制入口。
+- 新增 `HistoryService.ets`，使用 Preferences 保存最多 100 条文本和元数据；增加写入队列错误恢复、历史数据校验和 UUID 结果 ID，避免重启后的碰撞和损坏数据污染 UI。
+- 验证：debug HAP 构建通过；Mate 90 Pro API 26 模拟器日志确认 `CapturePhoto callback received` 与 `CapturePhoto converted to RGBA PixelMap`。物体检测返回 Core Vision 错误 `1011000002`，OCR 初始化返回超时 `200`，页面显示失败提示且没有写入假历史。
+- 证据：`docs/qa/2026-10-11-recognition-chain.jpeg`、`docs/qa/2026-10-11-recognition-chain-hilog.txt`、`docs/qa/2026-10-11-history-empty.jpeg`。
+- 遗留风险：模拟器缺少可用视觉模型，识别成功、结果页非空态、历史删除/重启回读和真机回归需在能力完整设备上继续验证；正式身份、签名及平板/折叠屏回归暂缓。
+
 ## 2026-10-11｜审查问题修复与模拟器回归
 
 - 完成上一轮安全审查的代码修复：移除未使用的 `READ_MEDIA`/`INTERNET` 权限，补齐 CameraKit 异步竞态、后台停止、异常释放和运行时错误监听。

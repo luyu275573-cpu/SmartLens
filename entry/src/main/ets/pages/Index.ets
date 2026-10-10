@@ -1,7 +1,13 @@
 import { DesignTokens } from '../common/DesignTokens';
 import { Context } from '@kit.AbilityKit';
 import { photoAccessHelper } from '@kit.MediaLibraryKit';
+import { image } from '@kit.ImageKit';
+import { router } from '@kit.ArkUI';
 import { CameraPreviewHandle, CameraPreviewService } from '../service/CameraPreviewService';
+import { ImageProcessingService } from '../service/ImageProcessingService';
+import { HistoryService } from '../service/HistoryService';
+import { RecognitionService } from '../service/RecognitionService';
+import { RecognitionResult, RecognitionType } from '../model/RecognitionResult';
 
 @Entry
 @Component
@@ -12,10 +18,12 @@ struct Index {
   @State cameraStatus: string = 'idle';
   @State flashEnabled: boolean = false;
   @State actionMessage: string = '';
+  @State recognitionLoading: boolean = false;
   @State pageVisible: boolean = true;
   private readonly cameraController: XComponentController = new XComponentController();
   private cameraHandle: CameraPreviewHandle | undefined = undefined;
   private previewGeneration: number = 0;
+  private pendingCaptureType: RecognitionType = RecognitionType.OBJECT;
 
   aboutToAppear(): void {
     this.pageVisible = true;
@@ -54,10 +62,8 @@ struct Index {
       const handle: CameraPreviewHandle = await CameraPreviewService.open(
         hostContext,
         surfaceId,
-        () => {
-          if (generation === this.previewGeneration && this.pageVisible) {
-            this.actionMessage = '照片已捕获，等待识别链路处理';
-          }
+        async (pixelMap: image.PixelMap): Promise<void> => {
+          await this.handlePixelMap(pixelMap, `camera://capture/${Date.now()}`, generation, this.pendingCaptureType);
         },
         () => {
           if (generation === this.previewGeneration && this.pageVisible) {
@@ -96,19 +102,24 @@ struct Index {
   }
 
   private async capturePhoto(): Promise<void> {
+    if (this.recognitionLoading) {
+      this.actionMessage = '上一张图片正在识别，请稍候';
+      return;
+    }
     const handle: CameraPreviewHandle | undefined = this.cameraHandle;
     if (handle === undefined || this.cameraStatus !== 'ready') {
       this.actionMessage = '相机尚未准备好';
       return;
     }
     const generation: number = this.previewGeneration;
+    this.pendingCaptureType = this.recognitionType();
     this.cameraStatus = 'capturing';
     try {
       await CameraPreviewService.capture(handle);
       if (generation !== this.previewGeneration || !this.pageVisible || this.cameraHandle !== handle) {
         return;
       }
-      this.actionMessage = '照片已捕获，等待识别链路处理';
+      this.actionMessage = '照片已捕获，正在识别…';
       this.cameraStatus = 'ready';
     } catch {
       if (generation === this.previewGeneration && this.pageVisible && this.cameraHandle === handle) {
@@ -134,6 +145,10 @@ struct Index {
   }
 
   private async pickPhoto(): Promise<void> {
+    if (this.recognitionLoading) {
+      this.actionMessage = '上一张图片正在识别，请稍候';
+      return;
+    }
     try {
       const picker: photoAccessHelper.PhotoViewPicker = new photoAccessHelper.PhotoViewPicker();
       const result = await picker.select({
@@ -141,8 +156,18 @@ struct Index {
         maxSelectNumber: 1,
         isOriginalSupported: true
       });
-      if (this.pageVisible) {
-        this.actionMessage = result.photoUris.length > 0 ? '已选择图片，等待识别链路处理' : '未选择图片';
+      if (result.photoUris.length === 0) {
+        if (this.pageVisible) {
+          this.actionMessage = '未选择图片';
+        }
+        return;
+      }
+      const uri: string = result.photoUris[0];
+      const pixelMap: image.PixelMap = await ImageProcessingService.fromUri(uri);
+      try {
+        await this.handlePixelMap(pixelMap, uri, this.previewGeneration, this.recognitionType());
+      } finally {
+        await ImageProcessingService.release(pixelMap);
       }
     } catch {
       if (this.pageVisible) {
@@ -151,10 +176,51 @@ struct Index {
     }
   }
 
+  private async handlePixelMap(pixelMap: image.PixelMap, imageUri: string, generation: number,
+    type: RecognitionType): Promise<void> {
+    if (!this.pageVisible || generation !== this.previewGeneration) {
+      return;
+    }
+    this.recognitionLoading = true;
+    this.actionMessage = '正在进行端侧识别…';
+    try {
+      const result: RecognitionResult = await RecognitionService.run(pixelMap, type, imageUri);
+      const hostContext: Context | undefined = this.getUIContext().getHostContext();
+      if (hostContext === undefined) {
+        throw new Error('HOST_CONTEXT_UNAVAILABLE');
+      }
+      await HistoryService.save(hostContext, result);
+      if (this.pageVisible && generation === this.previewGeneration) {
+        AppStorage.setOrCreate('activeRecognitionResult', result);
+        this.actionMessage = '';
+        await router.pushUrl({ url: 'pages/Result' });
+      }
+    } catch {
+      if (this.pageVisible && generation === this.previewGeneration) {
+        this.actionMessage = type === RecognitionType.BARCODE ? '扫码能力暂未接入，请先使用识物、文字或票据模式' : '识别服务暂不可用，请更换图片后重试';
+      }
+    } finally {
+      this.recognitionLoading = false;
+    }
+  }
+
+  private recognitionType(): RecognitionType {
+    switch (this.currentTab) {
+      case 1: return RecognitionType.TEXT;
+      case 2: return RecognitionType.DOCUMENT;
+      case 3: return RecognitionType.BARCODE;
+      default: return RecognitionType.OBJECT;
+    }
+  }
+
+  private openHistory(): void {
+    router.pushUrl({ url: 'pages/History' });
+  }
+
   private showPrivacyPolicy(): void {
     this.getUIContext().showAlertDialog({
       title: 'SmartLens 隐私政策',
-      message: 'SmartLens 仅在你主动使用拍照或相册选择功能时访问图片。当前版本的预览和识别数据只在设备侧处理，不上传图片；相册通过系统图片选择器授权。识别结果的保存、删除和导出规则将在对应功能上线前单独说明。你可以随时在系统设置中撤回相机权限。',
+      message: 'SmartLens 仅在你主动使用拍照或相册选择功能时访问图片。当前版本的预览和识别数据只在设备侧处理，不上传图片；相册通过系统图片选择器授权。识别历史只保存在本机 Preferences，最多保留 100 条文本和元数据，原始图片不会写入历史，用户可在历史页逐条删除。你可以随时在系统设置中撤回相机权限。',
       autoCancel: true,
       confirm: {
         value: '知道了',
@@ -177,6 +243,13 @@ struct Index {
           .accessibilityText('查看隐私政策')
           .accessibilityRole(AccessibilityRoleType.BUTTON)
           .onClick(() => { this.showPrivacyPolicy(); })
+          .margin({ right: DesignTokens.SPACE_3 })
+        Text('历史')
+          .fontSize(DesignTokens.FONT_STATUS)
+          .fontColor(DesignTokens.TEXT_SECONDARY)
+          .accessibilityText('查看识别历史')
+          .accessibilityRole(AccessibilityRoleType.BUTTON)
+          .onClick(() => { this.openHistory(); })
           .margin({ right: DesignTokens.SPACE_3 })
         Text('🔒 本地识别')
           .fontSize(DesignTokens.FONT_STATUS)
@@ -347,6 +420,13 @@ struct Index {
           .textAlign(TextAlign.Center)
           .padding({ top: DesignTokens.SPACE_2, bottom: DesignTokens.SPACE_2 })
           .accessibilityText(this.actionMessage)
+      }
+      if (this.recognitionLoading) {
+        LoadingProgress()
+          .color(DesignTokens.PRIMARY_GREEN)
+          .width(24)
+          .height(24)
+          .accessibilityText('正在进行端侧识别')
       }
     }
     .width('100%')
