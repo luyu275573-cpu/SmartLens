@@ -6,20 +6,39 @@ import { RecognizedItem, RecognitionResult, RecognitionType } from '../model/Rec
  */
 export class RecognitionService {
   static readonly MIN_CONFIDENCE: number = 0.6;
+  private static nextId: number = 0;
 
   static createResult(type: RecognitionType, imageUri: string, items: RecognizedItem[], timestamp: number = Date.now()): RecognitionResult {
-    const confidence: number = RecognitionService.highestConfidence(items);
+    const safeItems: RecognizedItem[] = RecognitionService.sanitizeItems(items);
+    const safeTimestamp: number = timestamp === timestamp && timestamp >= 0 ? timestamp : Date.now();
+    const confidence: number = RecognitionService.highestConfidence(safeItems);
     const needsManualConfirmation: boolean = confidence < RecognitionService.MIN_CONFIDENCE;
+    RecognitionService.nextId = (RecognitionService.nextId + 1) % Number.MAX_SAFE_INTEGER;
     return {
-      id: `${type}-${timestamp}`,
+      id: `${type}-${safeTimestamp}-${RecognitionService.nextId}`,
       type: type,
       imageUri: imageUri,
-      content: RecognitionService.contentOf(items),
-      items: items,
+      content: RecognitionService.contentOf(safeItems),
+      items: safeItems,
       confidence: confidence,
       needsManualConfirmation: needsManualConfirmation,
-      timestamp: timestamp
+      timestamp: safeTimestamp
     };
+  }
+
+  private static sanitizeItems(items: RecognizedItem[]): RecognizedItem[] {
+    const safeItems: RecognizedItem[] = [];
+    for (const item of items) {
+      if (item.score !== item.score || item.score < 0 || item.score > 1) {
+        continue;
+      }
+      safeItems.push({
+        label: item.label,
+        value: item.value,
+        score: item.score
+      });
+    }
+    return safeItems;
   }
 
   private static highestConfidence(items: RecognizedItem[]): number {

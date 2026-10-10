@@ -13,7 +13,8 @@ if ($null -eq $hvigor) {
 
 Push-Location $projectRoot
 try {
-  & $hvigor.Source assembleHap
+  $buildArgs = @('assembleHap', '--no-daemon', '-p', "buildMode=$BuildMode")
+  & $hvigor.Source @buildArgs
   if ($LASTEXITCODE -ne 0) {
     throw "HarmonyOS build failed with exit code $LASTEXITCODE"
   }
@@ -25,7 +26,33 @@ try {
     throw 'Build succeeded, but no HAP was found below entry\build.'
   }
 
+  Add-Type -AssemblyName System.IO.Compression.FileSystem
+  $archive = [System.IO.Compression.ZipFile]::OpenRead($artifact.FullName)
+  try {
+    $moduleEntry = $archive.GetEntry('module.json')
+    if ($null -eq $moduleEntry) {
+      throw 'Built HAP does not contain module.json.'
+    }
+    $reader = New-Object System.IO.StreamReader($moduleEntry.Open())
+    try {
+      $moduleMetadata = $reader.ReadToEnd() | ConvertFrom-Json
+    }
+    finally {
+      $reader.Dispose()
+    }
+  }
+  finally {
+    $archive.Dispose()
+  }
+
+  $actualBuildMode = [string]$moduleMetadata.app.buildMode
+  $actualDebug = [bool]$moduleMetadata.app.debug
+  if ($actualBuildMode -ne $BuildMode -or (($BuildMode -eq 'release') -and $actualDebug) -or (($BuildMode -eq 'debug') -and -not $actualDebug)) {
+    throw "HAP build mode mismatch. Expected $BuildMode, got buildMode=$actualBuildMode, debug=$actualDebug."
+  }
+
   Write-Host 'HarmonyOS build passed.'
+  Write-Host "BuildMode: $actualBuildMode (debug=$actualDebug)"
   Write-Host "Artifact: $($artifact.FullName)"
   Write-Host "Size: $($artifact.Length) bytes"
 }

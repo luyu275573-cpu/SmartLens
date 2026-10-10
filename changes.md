@@ -1,5 +1,16 @@
 # 变更记录
 
+## 2026-10-11｜全面审查问题修复与模拟器回归
+
+- 状态：`done`
+- 权限：从 `module.json5` 移除未使用的 `READ_MEDIA`、`INTERNET`，相册改用系统 `PhotoViewPicker`。
+- CameraKit：补齐输入/输出/session 错误监听、PhotoOutput 回调、异步启动代次校验、页面/后台停止、异常阶段清理和幂等释放。
+- 识别模型：过滤 NaN 与越界分数，复制输入项，使用时间戳加递增序列生成结果 ID。
+- 首页：拍照、相册、闪光灯入口具备实际调用和降级提示；新增隐私政策弹窗、无障碍语义、设备类型声明和自动旋转。
+- 构建门禁：`scripts/build-harmony.ps1` 将 `BuildMode` 传给 Hvigor，并解析 HAP `module.json` 校验 debug/release 元数据。
+- 验证：标准检查通过；debug/release 构建均通过；HAP 元数据仅含 `ohos.permission.CAMERA`；Mate 90 Pro API 26 模拟器完成预览、隐私政策、系统图片选择器、拍照反馈和闪光灯降级验证。
+- 遗留风险：HAP 仍未签名，正式 bundleName/vendor 未确定；真实 PixelMap/Core Vision Kit、真机和多设备回归待后续任务。
+
 ## 2026-10-11｜全面缺陷与安全审查
 
 - 状态：`done`

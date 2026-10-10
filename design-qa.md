@@ -1,5 +1,32 @@
 # 设计与交互 QA
 
+## 2026-10-11｜审查修复模拟器回归
+
+### 运行环境
+
+- 设备/模拟器：Mate 90 Pro
+- 系统版本：HarmonyOS 7.0.0（API 26）
+- 目标：`127.0.0.1:5557`
+- 包名与 Ability：`com.example.smartlens` / `EntryAbility`
+- 截图构建：`entry/build/default/outputs/default/entry-default-unsigned.hap`（debug，未签名；本轮另行验证 release 元数据）
+
+### 检查结果
+
+| 场景 | 操作前状态 | 用户动作 | 操作后状态 | 结果 | 证据 |
+| --- | --- | --- | --- | --- | --- |
+| CameraKit 预览 | 首次权限对话框 | 点击“允许” | 预览显示，扫描叠加层保留 | `passed` | `docs/qa/2026-10-11-home-granted.jpeg` |
+| 隐私政策 | 首页已显示 | 点击顶部“隐私政策” | 弹出端侧处理与权限说明 | `passed` | `docs/qa/2026-10-11-privacy-policy.jpeg` |
+| 相册 | 首页预览已运行 | 点击相册图标 | 打开系统图片选择器 | `passed` | `docs/qa/2026-10-11-photo-picker.jpeg` |
+| 拍照 | PhotoOutput 可用 | 点击中心按钮 | 显示“照片已捕获，等待识别链路处理” | `passed` | `docs/qa/2026-10-11-capture-feedback.jpeg` |
+| 闪光灯降级 | 预览已运行 | 点击闪光灯图标 | 模拟器显示“不支持闪光灯”反馈 | `passed` | `docs/qa/2026-10-11-flash-feedback.jpeg` |
+| 后台/退出 | CameraKit 已打开 | `aa force-stop` 并重启 | hilog 出现 `CAMERA_END`，进程重新获得相机 | `passed` | 设备 hilog |
+
+### 结论与风险
+
+- 本轮已验证入口响应、系统 Picker、PhotoOutput 反馈和不支持能力的降级状态。
+- 截图中的实时摄像头区域已遮盖；模拟器证据不能替代真机、平板和折叠态验证。
+- 真实识别、结果页、PixelMap 传递和正式签名仍未完成。
+
 ## 2026-10-10｜首页静态基线
 
 ### 运行环境

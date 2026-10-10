@@ -78,10 +78,9 @@ hdc install <hap路径>           # 真机安装
 ## 9. 验收门禁
 L1 构建 HAP 通过 → L2 关键逻辑单测 → L3 真机跑通核心链路（截图）→ L4 人工 review + 上架前检测（签名/release/隐私）。
 
-## 10. 当前进度与第一步
-- 当前：仓库已建，有本文件 + docs + 设计 Token；DevEco 工程骨架待生成。
-- 第一步：用 DevEco Studio 新建空 Ability 工程（或手动补齐 hvigorfile.ts/module.json5/oh-package.json5），
-  然后实现「相机首页」：取景框 + 扫描框 + 底部模式 Tab（识物/文字/票据/扫码），对照 docs/design.html 第一屏。
+## 10. 当前进度与下一步
+- 当前：工程骨架、相机首页、运行时相机权限、CameraKit 预览/拍照反馈、系统图片选择器、闪光灯降级、结果分数校验、隐私政策入口和基础无障碍语义已完成；审查修复证据见 `docs/qa/2026-10-11-remediation.md`。
+- 下一步：接入真实 `PixelMap` 与 Core Vision Kit，完成结果页/历史页，并在真机、平板和折叠态回归；正式发布前补齐 bundleName/vendor、签名和正式隐私政策信息。
 - 每完成一个可验证单元就 git 提交。
 
 ## 11. 项目记录文件

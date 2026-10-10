@@ -2,7 +2,24 @@
 
 审查日期：2026-10-11  
 审查范围：ArkTS 源码、Stage 配置、权限、构建脚本、HAP 元数据、已有模拟器 QA 证据。  
-审查结论：`blocked`（发布门禁未通过）；当前未发现已写入仓库的密钥、令牌或明确的图片外传代码，但存在以下必须处理的阻断项和运行时风险。
+审查结论：审查当时为 `blocked`（发布门禁未通过）；当前未发现已写入仓库的密钥、令牌或明确的图片外传代码。
+
+## 2026-10-11 修复复核
+
+本轮已完成以下审查项的代码修复并通过 debug/release 构建：
+
+| 编号 | 复核状态 | 处理结果 |
+|---|---|---|
+| SL-003 | `fixed` | 构建脚本传递 `-p buildMode=...`，并解析 HAP 元数据校验 debug/release。 |
+| SL-004 | `fixed` | HAP 权限仅保留 `ohos.permission.CAMERA`；相册使用系统图片选择器。 |
+| SL-005～SL-007 | `fixed` | CameraKit 增加异步代次校验、后台/页面停止、阶段性异常清理和输入/输出/session/PhotoOutput 监听。 |
+| SL-008 | `fixed` | `onForeground` 重新请求并同步相机权限。 |
+| SL-009 | `fixed` | 过滤非法分数、复制结果项并使用递增序列生成 ID。 |
+| SL-010 | `partial` | 拍照、相册、闪光灯入口已接入；真实识别分发、结果页和历史页仍未上线。 |
+| SL-011 | `partial` | 已加入开发版隐私政策文件和应用内入口；正式主体、联系方式和合规审核待补充。 |
+| SL-013～SL-015 | `partial` | 对比度、无障碍语义、phone/tablet/2in1 声明和自动旋转已改善；平板/折叠屏/真机仍待回归。 |
+
+剩余发布阻断项为正式 `bundleName/vendor`、签名配置，以及真实设备和 Core Vision Kit 链路验证。模拟器证据见 `docs/qa/2026-10-11-remediation.md`。
 
 ## 已执行验证
 
@@ -11,8 +28,8 @@
 | `scripts/check-standard.ps1` | `passed` | 标准文件和状态词检查通过 |
 | `hvigorw assembleHap --no-daemon` | `passed`，有 ArkTS warning | `CameraPreviewService.ets` 的异常处理提示 |
 | `hvigorw assembleApp --no-daemon` | `passed`，未签名 | Hvigor 明确提示未配置 `signingConfigs` |
-| `scripts/build-harmony.ps1 -BuildMode release` | 脚本返回 `passed`，实际产物为 debug | HAP `module.json`：`buildMode: debug`、`debug: true` |
-| `hvigorw assembleHap --no-daemon -p buildMode=release` | `release` 元数据生效 | HAP `module.json`：`buildMode: release`、`debug: false`；仍未签名 |
+| `scripts/build-harmony.ps1 -BuildMode release`（审查时） | 曾返回 `passed`，实际产物为 debug | 已由本轮脚本修复并重新验证 |
+| `scripts/build-harmony.ps1 -BuildMode debug/release`（修复后） | `passed` | HAP 元数据分别为 `debug/true` 与 `release/false`；仍未签名 |
 | 视觉对比度计算 | 2 项不达标 | `#64748B/#1A2332 = 3.32:1`，`#64748B/#0B0F14 = 4.04:1` |
 | 模拟器运行 | 仅采用已有证据 | `docs/qa/2026-10-10-interaction.md`；本次环境未检测到 `hdc` |
 
@@ -33,66 +50,63 @@
 - 影响：只能安装未签名开发产物，不能进入正式发布链路。
 - 处理：配置 DevEco/AGC 正式证书、profile 和安全存储；口令与私钥不得入库。
 
-### SL-003｜构建脚本的 release 参数失效（高风险）
+### SL-003｜构建脚本的 release 参数失效（高风险，已修复）
 
 - 文件：`scripts/build-harmony.ps1:4-20`
-- 现状：脚本接收 `-BuildMode`，但始终只执行 `assembleHap`，未传入 `-p buildMode=release`。
+- 审查时现状：脚本接收 `-BuildMode`，但始终只执行 `assembleHap`，未传入 `-p buildMode=release`；当前已传递该参数并校验 HAP 元数据。
 - 复现：执行 `./scripts/build-harmony.ps1 -BuildMode release` 后，HAP 内部仍为 `buildMode: debug`、`debug: true`。
 - 影响：CI 或交付人员会得到“脚本报告 release、产物实际 debug”的错误安全信号。
 - 处理：脚本按模式传递 Hvigor 参数，并在成功后解析 HAP `module.json` 校验 `buildMode/debug`，不符合就失败。
 
-### SL-004｜权限声明超过当前功能需要（高风险）
+### SL-004｜权限声明超过当前功能需要（高风险，已修复）
 
 - 文件：`entry/src/main/module.json5:29-49`
-- 现状：声明了 `CAMERA`、`READ_MEDIA`、`INTERNET`，运行时只申请 `CAMERA`，当前源码没有相册读取、网络请求或视觉 SDK 上传实现。
+- 审查时现状：声明了 `CAMERA`、`READ_MEDIA`、`INTERNET`，运行时只申请 `CAMERA`；当前已移除后两项，并使用系统图片选择器。
 - 影响：扩大用户授权和商店审核范围；`INTERNET` 与“端侧本地识别”产品承诺形成不一致。
 - 处理：在功能真正接入前删除未使用权限；相册优先使用系统 Picker，确需受限媒体权限时补齐用途、运行时流程和隐私文案。
 
-### SL-005｜页面退出/后台期间存在相机资源竞态（高风险）
+### SL-005｜页面退出/后台期间存在相机资源竞态（高风险，已修复）
 
 - 文件：`entry/src/main/ets/pages/Index.ets:14-40`、`entry/src/main/ets/entryability/EntryAbility.ets:38-42`
-- 现状：`startCameraPreview()` 等待异步 `CameraPreviewService.open()` 时，页面可能已触发 `aboutToDisappear`/`XComponent.onDestroy`；此时 `cameraHandle` 尚未赋值，随后 `open()` 成功会把句柄写回已离开的页面，无法再释放。Ability 的 `onBackground()` 也是空实现。
+- 审查时现状：`startCameraPreview()` 等待异步 `CameraPreviewService.open()` 时存在页面离开竞态，Ability 的 `onBackground()` 也是空实现；当前已加入启动代次、页面/后台停止和返回后句柄校验。
 - 影响：相机输入、预览输出和 session 可能泄漏；应用退到后台后还可能继续占用摄像头，造成隐私、耗电和下次打开冲突。
 - 处理：引入启动代次/取消标记，在 `open()` 返回后检查页面仍有效；在 `onBackground` 或等价生命周期停止预览，回前台按权限和 surface 状态恢复。
 
-### SL-006｜CameraKit 中间创建失败时不能保证释放（高风险）
+### SL-006｜CameraKit 中间创建失败时不能保证释放（高风险，已修复）
 
 - 文件：`entry/src/main/ets/service/CameraPreviewService.ets:37-53`
-- 现状：`createCameraInput`、`createPreviewOutput`、`createSession` 位于 `try` 之前。若第二或第三个创建调用抛异常，之前已创建的对象不会进入统一释放分支。构建器也对这些调用给出“Function may throw exceptions”警告。
+- 审查时现状：`createCameraInput`、`createPreviewOutput`、`createSession` 位于统一清理范围之外；当前已改为可选句柄分阶段创建并在失败时释放。
 - 影响：相机服务长期占用、后续打开失败或进程稳定性下降。
 - 处理：使用可选句柄在同一 `try/finally` 中分阶段创建和释放；保留原始错误码用于诊断。
 
-### SL-007｜缺少 CameraKit 运行时错误监听（高风险）
+### SL-007｜缺少 CameraKit 运行时错误监听（高风险，已修复）
 
 - 文件：`entry/src/main/ets/service/CameraPreviewService.ets`
-- 现状：没有为 `CameraInput`、`PreviewOutput`、`PhotoSession` 注册 `error`/占用/服务异常监听。
+- 审查时现状：没有为 `CameraInput`、`PreviewOutput`、`PhotoSession` 注册错误监听；当前已注册并在释放时注销。
 - 影响：相机被其他应用占用、系统禁用或服务 fatal error 时，页面可能仍显示 ready，用户无法重试或得到准确降级提示。
 - 处理：注册并在释放时注销监听；将冲突、禁用、服务故障映射为可操作的 UI 状态。
 
 ## 中风险功能与数据问题
 
-### SL-008｜权限恢复路径缺失
+### SL-008｜权限恢复路径缺失（已修复）
 
-- 文件：`EntryAbility.ets:40-42`、`Index.ets`
-- 用户在系统设置重新授权后，应用没有在 `onForeground` 主动复核权限，也没有“重新授权/打开设置”动作；通常需要重启应用才能恢复预览。
+- 文件：`EntryAbility.ets`、`Index.ets`
+- 审查时缺少前台复核；当前 `onForeground` 会重新请求并同步权限，页面按状态恢复或降级预览。
 
-### SL-009｜识别结果输入未做边界校验
+### SL-009｜识别结果输入未做边界校验（已修复）
 
 - 文件：`entry/src/main/ets/service/RecognitionService.ets:10-40`、`model/RecognitionResult.ets:12-26`
-- `score` 未验证为有限值且位于 `[0,1]`；大于 1 的异常分数会直接绕过 `0.6` 人工确认门槛。
-- `id = type + timestamp` 在同一毫秒的并发识别中可能碰撞。
-- 结果直接保存调用方传入的可变 `items` 引用；`imageUri`、`timestamp`、文本字段也没有格式或来源校验。
-- 处理：拒绝/归一化非法 SDK 输出，使用唯一 ID（例如时间戳加随机/递增序列），复制结果数组，并对 URI 来源和导出格式做允许列表校验。
+- 审查时 `score`、ID 和输入数组存在上述风险；当前已过滤 NaN/越界分数、复制结果项，并以时间戳加递增序列生成 ID。URI 来源和导出格式校验应在结果页/导出功能上线时继续补充。
 
-### SL-010｜主要入口仍是视觉占位，功能状态与 UI 不一致
+### SL-010｜主要入口仍是视觉占位，功能状态与 UI 不一致（部分修复）
 
 - 文件：`entry/src/main/ets/pages/Index.ets:133-165,177-188`
-- 拍照、相册、闪光灯三个入口没有 `onClick`；模式 Tab 只改变颜色/字重，没有改变识别分发；没有 `PhotoOutput`、`PixelMap`、Core Vision Kit、结果页或历史页。
+- 审查时三个入口没有 `onClick`；当前已接入拍照、系统相册选择器和闪光灯降级反馈。模式分发、`PixelMap`、Core Vision Kit、结果页和历史页仍未上线。
 - 影响：用户会以为功能可用，实际点击无响应；这是当前 MVP 的主要功能缺口。
 
-### SL-011｜隐私政策与数据处理披露缺失
+### SL-011｜隐私政策与数据处理披露缺失（开发版已补齐）
 
-- 全仓库检索只有设计文案和开发文档，没有应用内隐私政策文本、入口或同意/查看路径。
+- 审查时全仓库没有应用内隐私政策；当前已加入 `docs/privacy-policy.md` 和首页查看入口，正式主体信息和合规审核仍待补充。
 - 影响：相机、相册、识别结果和未来票据/证件 PII 缺少合规说明；“🔒 本地识别”徽标不能替代正式披露。
 - 处理：在接入真实识别和媒体选择前补齐隐私政策、用途说明、端侧处理范围、保留/删除规则和第三方 SDK 说明。
 
@@ -105,19 +119,17 @@
 
 ## 低风险质量与可维护性问题
 
-### SL-013｜深色主题次要文字对比度不足
+### SL-013｜深色主题次要文字对比度不足（已改善）
 
-- `DesignTokens.TEXT_SECONDARY`（`#64748B`）在 `PREVIEW_BG`（`#1A2332`）上为 `3.32:1`，在 `CAMERA_BG`（`#0B0F14`）上为 `4.04:1`，普通正文目标通常应达到 `4.5:1`。
+- 审查时 `DesignTokens.TEXT_SECONDARY` 为 `#64748B`；当前已调整为 `#94A3B8`，仍需在真实设备大字号和主题切换下复核。
 
-### SL-014｜无障碍语义不完整
+### SL-014｜无障碍语义不完整（已改善）
 
-- 图标使用 Emoji/Text，未提供可读名称、角色或状态描述；拍照、相册和闪光灯也不是明确的可访问按钮。
-- 选中状态主要依赖颜色和字重，未验证大字号、读屏和系统字体放大。
+- 审查时图标和入口缺少语义；当前已为隐私政策、拍照、相册、闪光灯和模式 Tab 增加可读名称与按钮角色。大字号、读屏和系统字体放大仍需设备 QA。
 
-### SL-015｜设备适配覆盖不足
+### SL-015｜设备适配覆盖不足（声明已改善，回归待完成）
 
-- `module.json5` 仅声明 `phone`；未验证横竖屏、折叠态、平板和窗口尺寸变化。
-- 预览固定选择 `previewProfiles[0]`，未按窗口比例、方向和设备能力选择 profile。
+- 审查时 `module.json5` 仅声明 `phone`；当前已声明 `phone/tablet/2in1` 并启用自动旋转。平板、折叠态和 profile 选择策略仍需真机 QA。
 
 ### SL-016｜标准检查器无法阻止发布错误
 

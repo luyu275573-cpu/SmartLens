@@ -6,6 +6,8 @@ import { PermissionService } from '../service/PermissionService';
 const DOMAIN = 0x0000;
 
 export default class EntryAbility extends UIAbility {
+  private permissionRequestInFlight: boolean = false;
+
   onCreate(want: Want, launchParam: AbilityConstant.LaunchParam): void {
     hilog.info(DOMAIN, 'SmartLens', 'Ability onCreate');
   }
@@ -16,6 +18,7 @@ export default class EntryAbility extends UIAbility {
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
     AppStorage.setOrCreate('cameraPermissionState', 'pending');
+    AppStorage.setOrCreate('cameraLifecycle', 'foreground');
     windowStage.loadContent('pages/Index', (err) => {
       if (err.code) {
         hilog.error(DOMAIN, 'SmartLens', 'Failed to load content: %{public}s', JSON.stringify(err));
@@ -27,17 +30,32 @@ export default class EntryAbility extends UIAbility {
   }
 
   private async requestCameraPermission(): Promise<void> {
-    const summary = await PermissionService.request(this.context, [PermissionService.CAMERA]);
-    AppStorage.setOrCreate('cameraPermissionState', summary.allGranted ? 'granted' : 'denied');
-    hilog.info(DOMAIN, 'SmartLens', 'Camera permission granted: %{public}s', JSON.stringify(summary.allGranted));
-    if (!summary.allGranted) {
-      hilog.warn(DOMAIN, 'SmartLens', 'Camera permission denied or unavailable: %{public}s', JSON.stringify(summary));
+    if (this.permissionRequestInFlight) {
+      return;
+    }
+    this.permissionRequestInFlight = true;
+    try {
+      const summary = await PermissionService.request(this.context, [PermissionService.CAMERA]);
+      AppStorage.setOrCreate('cameraPermissionState', summary.allGranted ? 'granted' : 'denied');
+      hilog.info(DOMAIN, 'SmartLens', 'Camera permission granted: %{public}s', JSON.stringify(summary.allGranted));
+      if (!summary.allGranted) {
+        hilog.warn(DOMAIN, 'SmartLens', 'Camera permission denied or unavailable: %{public}s', JSON.stringify(summary));
+      }
+    } finally {
+      this.permissionRequestInFlight = false;
     }
   }
 
-  onWindowStageDestroy(): void {}
+  onWindowStageDestroy(): void {
+    AppStorage.setOrCreate('cameraLifecycle', 'background');
+  }
 
-  onForeground(): void {}
+  onForeground(): void {
+    AppStorage.setOrCreate('cameraLifecycle', 'foreground');
+    this.requestCameraPermission();
+  }
 
-  onBackground(): void {}
+  onBackground(): void {
+    AppStorage.setOrCreate('cameraLifecycle', 'background');
+  }
 }

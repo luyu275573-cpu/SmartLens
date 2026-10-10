@@ -1,5 +1,16 @@
 # SmartLens 开发日志
 
+## 2026-10-11｜审查问题修复与模拟器回归
+
+- 完成上一轮安全审查的代码修复：移除未使用的 `READ_MEDIA`/`INTERNET` 权限，补齐 CameraKit 异步竞态、后台停止、异常释放和运行时错误监听。
+- 首页入口已接入 CameraKit 拍照、系统 `PhotoViewPicker` 和闪光灯切换；设备能力不足时显示可操作的降级反馈。
+- 识别结果服务过滤 NaN/越界分数，复制结果项并使用时间戳加递增序列生成唯一 ID；低于 `0.6` 仍进入人工确认。
+- 新增开发版隐私政策文件和应用内查看入口，补充按钮/模式无障碍语义、对比度 Token、自动旋转及 phone/tablet/2in1 声明。
+- 修复构建脚本的 debug/release 参数传递，并在 HAP 内校验 `buildMode` 与 `debug` 元数据。
+- 验证：`scripts/check-standard.ps1`、debug 构建、release 构建均通过；HAP 权限只含 `ohos.permission.CAMERA`；Mate 90 Pro API 26 模拟器完成预览、隐私政策、系统图片选择器、拍照反馈和闪光灯降级验证。
+- 证据：`docs/qa/2026-10-11-remediation.md` 及同日期截图；实时摄像头区域已遮盖。
+- 遗留风险：正式身份和签名、真机/多设备回归、`PixelMap` 到 Core Vision Kit、结果页和历史页仍待后续任务。
+
 ## 2026-10-11
 
 - 完成一次全面缺陷与安全审查，覆盖 ArkTS 页面、CameraKit 服务、权限声明、Ability 生命周期、识别结果模型、构建脚本、HAP 元数据、隐私与无障碍。

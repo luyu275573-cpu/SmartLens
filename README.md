@@ -6,8 +6,8 @@ SmartLens 是 HarmonyOS NEXT 原生端侧图像识别应用，覆盖拍照识物
 
 - 平台：HarmonyOS NEXT / Stage 模型 / API 26
 - 语言与 UI：ArkTS + ArkUI
-- 当前已实现：工程入口、设计 Token、相机首页视觉骨架、模式 Tab、识别结果领域模型与置信度门槛、运行时相机权限、CameraKit 后置预览 surface
-- 尚未实现：`PhotoOutput` 拍照回调、Core Vision Kit、结果页、历史页、签名配置和真机回归
+- 当前已实现：工程入口、设计 Token、相机首页视觉骨架、模式 Tab、识别结果领域模型与置信度门槛、运行时相机权限、CameraKit 后置预览 surface、PhotoOutput 拍照反馈、系统图片选择器、闪光灯降级、隐私政策入口和基础无障碍语义
+- 尚未实现：`PixelMap` 到 Core Vision Kit、结果页、历史页、签名配置和真机/多设备回归
 
 ## 构建
 
@@ -15,7 +15,7 @@ SmartLens 是 HarmonyOS NEXT 原生端侧图像识别应用，覆盖拍照识物
 hvigorw.bat assembleHap
 ```
 
-产物位于 `entry/build/` 下的最新 `.hap` 文件。当前构建可通过，但项目没有 signingConfigs，产物为未签名 HAP。
+产物位于 `entry/build/` 下的最新 `.hap` 文件。项目没有 signingConfigs，产物为未签名 HAP。可用 `./scripts/build-harmony.ps1 -BuildMode debug` 或 `-BuildMode release` 构建并校验 HAP 元数据。
 
 ## 目录
 

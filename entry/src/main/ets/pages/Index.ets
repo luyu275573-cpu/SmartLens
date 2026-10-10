@@ -1,5 +1,6 @@
 import { DesignTokens } from '../common/DesignTokens';
 import { Context } from '@kit.AbilityKit';
+import { photoAccessHelper } from '@kit.MediaLibraryKit';
 import { CameraPreviewHandle, CameraPreviewService } from '../service/CameraPreviewService';
 
 @Entry
@@ -7,18 +8,42 @@ import { CameraPreviewHandle, CameraPreviewService } from '../service/CameraPrev
 struct Index {
   @State currentTab: number = 0;
   @StorageProp('cameraPermissionState') cameraPermissionState: string = 'pending';
+  @StorageProp('cameraLifecycle') cameraLifecycle: string = 'foreground';
   @State cameraStatus: string = 'idle';
+  @State flashEnabled: boolean = false;
+  @State actionMessage: string = '';
+  @State pageVisible: boolean = true;
   private readonly cameraController: XComponentController = new XComponentController();
   private cameraHandle: CameraPreviewHandle | undefined = undefined;
+  private previewGeneration: number = 0;
+
+  aboutToAppear(): void {
+    this.pageVisible = true;
+  }
+
+  onPageShow(): void {
+    this.pageVisible = true;
+    if (this.cameraPermissionState === 'granted' && this.cameraLifecycle === 'foreground') {
+      this.startCameraPreview();
+    }
+  }
+
+  onPageHide(): void {
+    this.pageVisible = false;
+    this.stopCameraPreview();
+  }
 
   aboutToDisappear(): void {
+    this.pageVisible = false;
     this.stopCameraPreview();
   }
 
   private async startCameraPreview(): Promise<void> {
-    if (this.cameraPermissionState !== 'granted' || this.cameraHandle !== undefined || this.cameraStatus === 'starting') {
+    if (this.cameraPermissionState !== 'granted' || this.cameraLifecycle !== 'foreground' ||
+      !this.pageVisible || this.cameraHandle !== undefined || this.cameraStatus === 'starting') {
       return;
     }
+    const generation: number = ++this.previewGeneration;
     this.cameraStatus = 'starting';
     try {
       const hostContext: Context | undefined = this.getUIContext().getHostContext();
@@ -26,19 +51,116 @@ struct Index {
         throw new Error('HOST_CONTEXT_UNAVAILABLE');
       }
       const surfaceId: string = this.cameraController.getXComponentSurfaceId();
-      this.cameraHandle = await CameraPreviewService.open(hostContext, surfaceId);
+      const handle: CameraPreviewHandle = await CameraPreviewService.open(
+        hostContext,
+        surfaceId,
+        () => {
+          if (generation === this.previewGeneration && this.pageVisible) {
+            this.actionMessage = '照片已捕获，等待识别链路处理';
+          }
+        },
+        () => {
+          if (generation === this.previewGeneration && this.pageVisible) {
+            this.handleCameraError();
+          }
+        }
+      );
+      if (generation !== this.previewGeneration || !this.pageVisible || this.cameraLifecycle !== 'foreground' ||
+        this.cameraPermissionState !== 'granted') {
+        await CameraPreviewService.release(handle);
+        return;
+      }
+      this.cameraHandle = handle;
       this.cameraStatus = 'ready';
     } catch {
-      this.cameraStatus = 'fallback';
+      if (generation === this.previewGeneration && this.pageVisible) {
+        this.cameraStatus = 'fallback';
+        this.actionMessage = '相机暂不可用，请稍后重试';
+      }
     }
   }
 
-  private async stopCameraPreview(): Promise<void> {
+  private async stopCameraPreview(nextStatus: string = 'idle'): Promise<void> {
+    ++this.previewGeneration;
     const handle: CameraPreviewHandle | undefined = this.cameraHandle;
     this.cameraHandle = undefined;
+    this.cameraStatus = nextStatus;
     if (handle !== undefined) {
       await CameraPreviewService.release(handle);
     }
+  }
+
+  private handleCameraError(): void {
+    this.actionMessage = '相机服务发生变化，请重新打开预览';
+    this.stopCameraPreview('fallback');
+  }
+
+  private async capturePhoto(): Promise<void> {
+    const handle: CameraPreviewHandle | undefined = this.cameraHandle;
+    if (handle === undefined || this.cameraStatus !== 'ready') {
+      this.actionMessage = '相机尚未准备好';
+      return;
+    }
+    const generation: number = this.previewGeneration;
+    this.cameraStatus = 'capturing';
+    try {
+      await CameraPreviewService.capture(handle);
+      if (generation !== this.previewGeneration || !this.pageVisible || this.cameraHandle !== handle) {
+        return;
+      }
+      this.actionMessage = '照片已捕获，等待识别链路处理';
+      this.cameraStatus = 'ready';
+    } catch {
+      if (generation === this.previewGeneration && this.pageVisible && this.cameraHandle === handle) {
+        this.cameraStatus = 'ready';
+        this.actionMessage = '当前设备暂不支持拍照输出';
+      }
+    }
+  }
+
+  private toggleFlash(): void {
+    if (this.cameraHandle === undefined || this.cameraStatus !== 'ready') {
+      this.actionMessage = '相机尚未准备好';
+      return;
+    }
+    const nextValue: boolean = !this.flashEnabled;
+    try {
+      CameraPreviewService.toggleFlash(this.cameraHandle, nextValue);
+      this.flashEnabled = nextValue;
+      this.actionMessage = nextValue ? '闪光灯已开启' : '闪光灯已关闭';
+    } catch {
+      this.actionMessage = '当前设备不支持闪光灯';
+    }
+  }
+
+  private async pickPhoto(): Promise<void> {
+    try {
+      const picker: photoAccessHelper.PhotoViewPicker = new photoAccessHelper.PhotoViewPicker();
+      const result = await picker.select({
+        MIMEType: photoAccessHelper.PhotoViewMIMETypes.IMAGE_TYPE,
+        maxSelectNumber: 1,
+        isOriginalSupported: true
+      });
+      if (this.pageVisible) {
+        this.actionMessage = result.photoUris.length > 0 ? '已选择图片，等待识别链路处理' : '未选择图片';
+      }
+    } catch {
+      if (this.pageVisible) {
+        this.actionMessage = '打开相册失败，请稍后重试';
+      }
+    }
+  }
+
+  private showPrivacyPolicy(): void {
+    this.getUIContext().showAlertDialog({
+      title: 'SmartLens 隐私政策',
+      message: 'SmartLens 仅在你主动使用拍照或相册选择功能时访问图片。当前版本的预览和识别数据只在设备侧处理，不上传图片；相册通过系统图片选择器授权。识别结果的保存、删除和导出规则将在对应功能上线前单独说明。你可以随时在系统设置中撤回相机权限。',
+      autoCancel: true,
+      confirm: {
+        value: '知道了',
+        action: () => {}
+      }
+    });
   }
 
   build() {
@@ -49,9 +171,17 @@ struct Index {
           .fontSize(DesignTokens.FONT_TITLE)
           .fontColor(DesignTokens.TEXT_ON_DARK)
         Blank()
+        Text('隐私政策')
+          .fontSize(DesignTokens.FONT_STATUS)
+          .fontColor(DesignTokens.TEXT_SECONDARY)
+          .accessibilityText('查看隐私政策')
+          .accessibilityRole(AccessibilityRoleType.BUTTON)
+          .onClick(() => { this.showPrivacyPolicy(); })
+          .margin({ right: DesignTokens.SPACE_3 })
         Text('🔒 本地识别')
           .fontSize(DesignTokens.FONT_STATUS)
           .fontColor(DesignTokens.TEXT_SECONDARY)
+          .accessibilityText('本地识别状态：图片在设备侧处理')
       }
       .width('100%')
       .padding(DesignTokens.SPACE_4)
@@ -71,17 +201,22 @@ struct Index {
       // CameraKit 预览区；未授权或设备不支持时回退到占位预览。
       Stack() {
         Stack() {
-          if (this.cameraPermissionState === 'granted' && this.cameraStatus !== 'fallback') {
+          if (this.cameraPermissionState === 'granted' && this.cameraLifecycle === 'foreground' &&
+            this.cameraStatus !== 'fallback') {
             XComponent({ id: 'camera-preview', type: XComponentType.SURFACE, controller: this.cameraController })
               .width('100%')
               .height('100%')
               .onLoad(() => { this.startCameraPreview(); })
-              .onDestroy(() => { this.stopCameraPreview(); })
+              .onDestroy(() => {
+                if (this.cameraStatus !== 'fallback') {
+                  this.stopCameraPreview();
+                }
+              })
           } else {
             Text('📦')
               .fontSize(DesignTokens.FONT_PREVIEW_ICON)
-              .width(110)
-              .height(110)
+              .width(DesignTokens.PREVIEW_PLACEHOLDER_SIZE)
+              .height(DesignTokens.PREVIEW_PLACEHOLDER_SIZE)
               .textAlign(TextAlign.Center)
               .backgroundColor(DesignTokens.CAMERA_BG)
               .borderRadius(DesignTokens.RADIUS_SCAN)
@@ -89,40 +224,40 @@ struct Index {
 
           // 扫描框四角与扫描线
         Stack() {
-          Text('').width('100%').height(2).backgroundColor(DesignTokens.PRIMARY_GREEN)
-          Text('').width(2).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN)
+          Text('').width('100%').height(DesignTokens.SCAN_LINE_THICKNESS).backgroundColor(DesignTokens.PRIMARY_GREEN)
+          Text('').width(DesignTokens.SCAN_LINE_THICKNESS).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN)
         }
-        .width(32)
-        .height(32)
+        .width(DesignTokens.SCAN_CORNER_SIZE)
+        .height(DesignTokens.SCAN_CORNER_SIZE)
         .align(Alignment.TopStart)
 
         Stack() {
-          Text('').width('100%').height(2).backgroundColor(DesignTokens.PRIMARY_GREEN)
-          Text('').width(2).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.TopEnd)
+          Text('').width('100%').height(DesignTokens.SCAN_LINE_THICKNESS).backgroundColor(DesignTokens.PRIMARY_GREEN)
+          Text('').width(DesignTokens.SCAN_LINE_THICKNESS).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.TopEnd)
         }
-        .width(32)
-        .height(32)
+        .width(DesignTokens.SCAN_CORNER_SIZE)
+        .height(DesignTokens.SCAN_CORNER_SIZE)
         .align(Alignment.TopEnd)
 
         Stack() {
-          Text('').width('100%').height(2).backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.BottomStart)
-          Text('').width(2).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN)
+          Text('').width('100%').height(DesignTokens.SCAN_LINE_THICKNESS).backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.BottomStart)
+          Text('').width(DesignTokens.SCAN_LINE_THICKNESS).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN)
         }
-        .width(32)
-        .height(32)
+        .width(DesignTokens.SCAN_CORNER_SIZE)
+        .height(DesignTokens.SCAN_CORNER_SIZE)
         .align(Alignment.BottomStart)
 
         Stack() {
-          Text('').width('100%').height(2).backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.BottomStart)
-          Text('').width(2).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.TopEnd)
+          Text('').width('100%').height(DesignTokens.SCAN_LINE_THICKNESS).backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.BottomStart)
+          Text('').width(DesignTokens.SCAN_LINE_THICKNESS).height('100%').backgroundColor(DesignTokens.PRIMARY_GREEN).align(Alignment.TopEnd)
         }
-        .width(32)
-        .height(32)
+        .width(DesignTokens.SCAN_CORNER_SIZE)
+        .height(DesignTokens.SCAN_CORNER_SIZE)
         .align(Alignment.BottomEnd)
 
         Text('')
           .width('70%')
-          .height(2)
+          .height(DesignTokens.SCAN_LINE_THICKNESS)
           .backgroundColor(DesignTokens.PRIMARY_GREEN)
           .opacity(0.85)
         }
@@ -130,38 +265,47 @@ struct Index {
         .height('46%')
         .align(Alignment.Center)
 
-        // 拍照、相册和闪光灯入口（能力接入前保留视觉入口）
+        // 拍照、相册和闪光灯入口
         Column() {
           Blank().layoutWeight(1)
           Row() {
             Text('🖼️')
               .fontSize(DesignTokens.FONT_STATUS)
               .fontColor(DesignTokens.TEXT_ON_DARK)
-              .width(56)
-              .height(56)
+              .width(DesignTokens.ACTION_SMALL_SIZE)
+              .height(DesignTokens.ACTION_SMALL_SIZE)
               .border({ width: 2, color: DesignTokens.TEXT_ON_DARK })
               .borderRadius(DesignTokens.RADIUS_ACTION_SMALL)
               .textAlign(TextAlign.Center)
+              .accessibilityText('从相册选择图片')
+              .accessibilityRole(AccessibilityRoleType.BUTTON)
+              .onClick(() => { this.pickPhoto(); })
               .margin({ right: DesignTokens.SPACE_5 })
 
             Text('⦿')
               .fontSize(DesignTokens.FONT_TITLE)
               .fontColor(DesignTokens.TEXT_PRIMARY)
-              .width(70)
-              .height(70)
+              .width(DesignTokens.ACTION_LARGE_SIZE)
+              .height(DesignTokens.ACTION_LARGE_SIZE)
               .backgroundColor(DesignTokens.CARD_WHITE)
               .borderRadius(DesignTokens.RADIUS_ACTION_LARGE)
               .textAlign(TextAlign.Center)
+              .accessibilityText('拍照并开始识别')
+              .accessibilityRole(AccessibilityRoleType.BUTTON)
+              .onClick(() => { this.capturePhoto(); })
               .margin({ right: DesignTokens.SPACE_5 })
 
-            Text('⚡')
+            Text(this.flashEnabled ? '💡' : '⚡')
               .fontSize(DesignTokens.FONT_STATUS)
               .fontColor(DesignTokens.TEXT_ON_DARK)
-              .width(56)
-              .height(56)
+              .width(DesignTokens.ACTION_SMALL_SIZE)
+              .height(DesignTokens.ACTION_SMALL_SIZE)
               .border({ width: 2, color: DesignTokens.TEXT_ON_DARK })
               .borderRadius(DesignTokens.RADIUS_ACTION_SMALL)
               .textAlign(TextAlign.Center)
+              .accessibilityText(this.flashEnabled ? '关闭闪光灯' : '打开闪光灯')
+              .accessibilityRole(AccessibilityRoleType.BUTTON)
+              .onClick(() => { this.toggleFlash(); })
           }
           .width('100%')
           .justifyContent(FlexAlign.Center)
@@ -184,11 +328,26 @@ struct Index {
             .layoutWeight(1)
             .textAlign(TextAlign.Center)
             .padding({ top: DesignTokens.SPACE_3, bottom: DesignTokens.SPACE_3 })
-            .onClick(() => { this.currentTab = index; })
+            .accessibilityText(`${item}模式${index === this.currentTab ? '，已选中' : ''}`)
+            .accessibilityRole(AccessibilityRoleType.BUTTON)
+            .onClick(() => {
+              this.currentTab = index;
+              this.actionMessage = `已切换到${item}模式`;
+            })
         }, (item: string) => item)
       }
       .width('100%')
       .backgroundColor(DesignTokens.CAMERA_BG)
+
+      if (this.actionMessage.length > 0) {
+        Text(this.actionMessage)
+          .width('100%')
+          .fontSize(DesignTokens.FONT_STATUS)
+          .fontColor(DesignTokens.SCAN_AMBER)
+          .textAlign(TextAlign.Center)
+          .padding({ top: DesignTokens.SPACE_2, bottom: DesignTokens.SPACE_2 })
+          .accessibilityText(this.actionMessage)
+      }
     }
     .width('100%')
     .height('100%')

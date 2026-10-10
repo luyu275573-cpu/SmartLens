@@ -7,6 +7,7 @@
 - 构建记录：`YYYY-MM-DD-build.md`
 - 交互记录：`YYYY-MM-DD-interaction.md`
 - 审查记录：`YYYY-MM-DD-security-audit.md`
+- 修复回归：`YYYY-MM-DD-remediation.md`
 - 前台证明：`YYYY-MM-DD-foreground.txt`
 - 截图：`screenshots/YYYY-MM-DD-<scene>.png`
 

@@ -16,7 +16,7 @@ export class DesignTokens {
 
   // 文字
   static readonly TEXT_PRIMARY: string = '#0F172A'
-  static readonly TEXT_SECONDARY: string = '#64748B'
+  static readonly TEXT_SECONDARY: string = '#94A3B8'
   static readonly TEXT_ON_DARK: string = '#FFFFFF'
 
   // 圆角
@@ -38,4 +38,11 @@ export class DesignTokens {
   static readonly FONT_STATUS: number = 11
   static readonly FONT_LABEL: number = 13
   static readonly FONT_PREVIEW_ICON: number = 40
+
+  // 可响应布局尺寸（vp）
+  static readonly PREVIEW_PLACEHOLDER_SIZE: number = 110
+  static readonly SCAN_CORNER_SIZE: number = 32
+  static readonly SCAN_LINE_THICKNESS: number = 2
+  static readonly ACTION_SMALL_SIZE: number = 56
+  static readonly ACTION_LARGE_SIZE: number = 70
 }

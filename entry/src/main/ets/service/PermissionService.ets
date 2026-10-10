@@ -14,7 +14,6 @@ export interface PermissionSummary {
  */
 export class PermissionService {
   static readonly CAMERA: Permissions = 'ohos.permission.CAMERA';
-  static readonly READ_MEDIA: Permissions = 'ohos.permission.READ_MEDIA';
 
   static async request(context: Context, permissions: Permissions[]): Promise<PermissionSummary> {
     try {

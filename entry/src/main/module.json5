@@ -4,7 +4,7 @@
     "type": "entry",
     "description": "$string:module_desc",
     "mainElement": "EntryAbility",
-    "deviceTypes": [ "phone" ],
+    "deviceTypes": [ "phone", "tablet", "2in1" ],
     "deliveryWithInstall": true,
     "installationFree": false,
     "pages": "$profile:main_pages",
@@ -17,6 +17,7 @@
         "label": "$string:EntryAbility_label",
         "startWindowIcon": "$media:icon",
         "startWindowBackground": "$color:start_window_background",
+        "orientation": "auto_rotation",
         "exported": true,
         "skills": [
           {
@@ -35,17 +36,6 @@
           "when": "inuse"
         }
       },
-      {
-        "name": "ohos.permission.READ_MEDIA",
-        "reason": "$string:read_media_reason",
-        "usedScene": {
-          "abilities": [ "EntryAbility" ],
-          "when": "inuse"
-        }
-      },
-      {
-        "name": "ohos.permission.INTERNET"
-      }
     ]
   }
 }
